@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"/>
+<title>MonoWallet — All Your Banks, One Place</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080c18;--bg2:#0d1221;--bg3:#111827;
+  --card:rgba(255,255,255,.04);--card2:rgba(255,255,255,.07);
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.14);
+  --accent:#6366f1;--accent2:#4f46e5;--accent-glow:rgba(99,102,241,.25);
+  --teal:#14b8a6;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;--pink:#ec4899;
+  --text1:#f1f5f9;--text2:#94a3b8;--text3:#475569;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);overflow:hidden}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text1);display:flex;justify-content:center}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+#app{width:100%;max-width:430px;height:100dvh;display:flex;flex-direction:column;background:var(--bg);position:relative}
+
+/* header */
+#app-header{flex-shrink:0;background:rgba(8,12,24,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;z-index:50}
+
+/* tabs */
+.tab-panel{display:none;flex-direction:column;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 96px}
+.tab-panel.active{display:flex;animation:fadeUp .28s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* bottom nav */
+#bottom-nav{flex-shrink:0;background:rgba(8,12,24,.94);backdrop-filter:blur(24px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:8px 4px max(8px,env(safe-area-inset-bottom));z-index:100}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 14px;border-radius:12px;cursor:pointer;color:var(--text3);font-size:10px;font-weight:700;letter-spacing:.04em;background:none;border:none;font-family:inherit;transition:color .18s;white-space:nowrap}
+.nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-btn.active{color:var(--accent)}
+.nav-fab{width:50px;height:50px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px var(--accent-glow);transition:all .18s;margin-bottom:4px}
+.nav-fab:hover{background:var(--accent2);transform:scale(1.06)}
+.nav-fab svg{width:22px;height:22px;stroke:white;fill:none;stroke-width:2.2;stroke-linecap:round}
+
+/* cards */
+.glass{background:var(--card);border:1px solid var(--border);border-radius:18px}
+.glass-hover:hover{border-color:var(--border2);transition:border-color .2s}
+
+/* wealth card */
+.wealth-card{border-radius:22px;padding:22px 22px 18px;background:linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#3730a3 100%);position:relative;overflow:hidden}
+.wealth-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 10%,rgba(255,255,255,.07),transparent 60%),radial-gradient(ellipse at 10% 90%,rgba(255,255,255,.04),transparent 55%)}
+
+/* mono card */
+.mono-card{border-radius:20px;padding:22px;background:linear-gradient(135deg,#312e81,#4f46e5 50%,#7c3aed);position:relative;overflow:hidden;min-height:150px;display:flex;flex-direction:column;justify-content:space-between}
+.mono-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 75% 15%,rgba(255,255,255,.1),transparent 55%)}
+
+/* account card */
+.acc-card{border-radius:18px;padding:20px;position:relative;overflow:hidden;cursor:pointer;transition:transform .18s,box-shadow .18s;display:flex;flex-direction:column;gap:12px}
+.acc-card:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,.45)}
+.acc-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 75% 15%,rgba(255,255,255,.09),transparent 55%)}
+
+/* buttons */
+.btn{font-family:inherit;font-weight:700;cursor:pointer;border:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff;border-radius:14px;padding:14px 22px;font-size:15px}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 8px 20px var(--accent-glow)}
+.btn-primary:active{transform:none}
+.btn-secondary{background:var(--card2);color:var(--text1);border:1px solid var(--border2);border-radius:13px;padding:12px 18px;font-size:14px}
+.btn-secondary:hover{background:rgba(255,255,255,.09)}
+.btn-ghost{background:none;color:var(--text2);font-size:13px;font-weight:600;padding:7px 11px;border-radius:10px;font-family:inherit;cursor:pointer;border:none;transition:all .15s}
+.btn-ghost:hover{color:var(--text1);background:rgba(255,255,255,.05)}
+.btn-sm{padding:9px 15px!important;font-size:13px!important;border-radius:10px!important}
+.btn-icon{width:40px;height:40px;border-radius:11px;background:var(--card2);border:1px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-icon:hover{border-color:var(--border2);color:var(--text1)}
+.btn-xs{padding:7px 13px!important;font-size:12px!important;border-radius:9px!important}
+
+/* form */
+.field{background:rgba(255,255,255,.05);border:1.5px solid var(--border);border-radius:12px;color:var(--text1);font-family:inherit;font-size:15px;padding:12px 15px;width:100%;outline:none;transition:border-color .18s,box-shadow .18s;-webkit-appearance:none}
+.field:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.13)}
+.field::placeholder{color:var(--text3)}
+.field option{background:#0d1221}
+.lbl{font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px;display:block}
+
+/* currency pills */
+.cur-pill{padding:4px 11px;border-radius:100px;font-size:11px;font-weight:700;cursor:pointer;transition:all .14s;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);background:transparent;font-family:inherit}
+.cur-pill.active{background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.28)}
+.cur-pill:hover:not(.active){background:rgba(255,255,255,.08)}
+
+/* quick actions */
+.qa{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:transform .15s}
+.qa:hover{transform:translateY(-2px)}
+.qa-icon{width:50px;height:50px;border-radius:15px;display:flex;align-items:center;justify-content:center}
+.qa span{font-size:11px;font-weight:600;color:var(--text2)}
+
+/* tx rows */
+.tx-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.tx-row:last-child{border-bottom:none}
+.tx-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+
+/* modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-sheet{width:100%;max-width:430px;background:var(--bg2);border-radius:24px 24px 0 0;border-top:1px solid var(--border2);max-height:94dvh;overflow-y:auto;padding-bottom:32px;transform:translateY(100%);transition:transform .32s cubic-bezier(.34,1.2,.64,1)}
+.modal-overlay.open .modal-sheet{transform:translateY(0)}
+.modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0}
+
+/* OTP / PIN */
+.digit-row{display:flex;gap:8px;justify-content:center}
+.digit-box{width:46px;height:54px;border-radius:12px;background:rgba(255,255,255,.06);border:1.5px solid var(--border2);color:var(--text1);font-family:inherit;font-size:22px;font-weight:800;text-align:center;outline:none;transition:border-color .15s,box-shadow .15s;caret-color:var(--accent)}
+.digit-box:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.13)}
+.digit-box.filled{border-color:rgba(99,102,241,.45);background:rgba(99,102,241,.07)}
+.digit-box.err{border-color:var(--red)!important;background:rgba(239,68,68,.08)!important}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.shake{animation:shake .38s ease}
+
+/* step dots */
+.sdots{display:flex;gap:5px;justify-content:center}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--border2);transition:all .22s}
+.sdot.active{background:var(--accent);width:20px;border-radius:3px}
+.sdot.done{background:var(--teal)}
+
+/* bank option */
+.bank-opt{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:13px;border:1.5px solid var(--border);cursor:pointer;transition:all .14s;background:rgba(255,255,255,.03)}
+.bank-opt:hover{border-color:var(--accent);background:rgba(99,102,241,.06)}
+.bank-opt.sel{border-color:var(--accent);background:rgba(99,102,241,.1)}
+
+/* progress */
+.prog{background:rgba(255,255,255,.07);border-radius:100px;overflow:hidden}
+.prog-fill{border-radius:100px;height:100%;transition:width .55s cubic-bezier(.34,1.4,.64,1)}
+
+/* toast */
+#toast-stack{position:fixed;bottom:92px;right:16px;z-index:500;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.toast-item{display:flex;align-items:center;gap:9px;padding:11px 15px;background:var(--bg3);border:1px solid var(--border2);border-radius:13px;box-shadow:0 8px 24px rgba(0,0,0,.4);font-size:13px;font-weight:600;white-space:nowrap;animation:toastIn .28s cubic-bezier(.34,1.4,.64,1)}
+@keyframes toastIn{from{opacity:0;transform:translateX(80px)}to{opacity:1;transform:translateX(0)}}
+.toast-item.out{animation:toastOut .22s ease forwards}
+@keyframes toastOut{to{opacity:0;transform:translateX(80px)}}
+
+/* misc */
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;letter-spacing:.04em}
+.badge{font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;letter-spacing:.05em;text-transform:uppercase}
+.flag-chip{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.04em}
+.flag-large{background:rgba(239,68,68,.12);color:#fca5a5}
+.flag-rec{background:rgba(99,102,241,.12);color:#a5b4fc}
+.flag-unusual{background:rgba(245,158,11,.12);color:#fcd34d}
+.sec-lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:10px 0 4px;display:flex;align-items:center;gap:5px}
+.divider{border:none;border-top:1px solid var(--border);margin:2px 0}
+#confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:9999;display:none}
+
+/* account selector */
+.acc-sel-btn{display:flex;align-items:center;gap:11px;padding:13px 14px;border-radius:13px;border:1.5px solid var(--border2);background:rgba(255,255,255,.04);cursor:pointer;transition:border-color .14s;width:100%;font-family:inherit;text-align:left;color:var(--text1)}
+.acc-sel-btn:hover,.acc-sel-btn:focus{border-color:var(--accent);outline:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="app-header">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:32px;height:32px;background:var(--accent);border-radius:9px;display:flex;align-items:center;justify-content:center">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+      </div>
+      <span style="font-size:18px;font-weight:800;letter-spacing:-.02em">MonoWallet</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:9px">
+      <button class="btn-icon" data-action="showNotif">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      </button>
+      <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;cursor:pointer">F</div>
+    </div>
+  </header>
+
+  <section id="tab-home"     class="tab-panel active"></section>
+  <section id="tab-accounts" class="tab-panel"></section>
+  <section id="tab-transfer" class="tab-panel"></section>
+  <section id="tab-spending" class="tab-panel"></section>
+  <section id="tab-more"     class="tab-panel"></section>
+
+  <nav id="bottom-nav"></nav>
+</div>
+
+<!-- Single modal overlay -->
+<div id="modal-overlay" class="modal-overlay">
+  <div id="modal-sheet" class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div id="modal-body" style="padding:0 20px 4px"></div>
+  </div>
+</div>
+
+<div id="toast-stack"></div>
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════════════════
+const BANKS = [
+  {id:'hbl',      name:'HBL',           full:'Habib Bank Limited',        abbr:'HBL', color:'#00a651', bg:'rgba(0,166,81,.18)'},
+  {id:'mcb',      name:'MCB Bank',       full:'MCB Bank Limited',          abbr:'MCB', color:'#e31837', bg:'rgba(227,24,55,.18)'},
+  {id:'ubl',      name:'UBL',            full:'United Bank Limited',       abbr:'UBL', color:'#1d4ed8', bg:'rgba(29,78,216,.18)'},
+  {id:'meezan',   name:'Meezan Bank',    full:'Meezan Bank Limited',       abbr:'MB',  color:'#c8102e', bg:'rgba(200,16,46,.18)'},
+  {id:'alfalah',  name:'Bank Alfalah',   full:'Bank Alfalah Limited',      abbr:'BAF', color:'#006633', bg:'rgba(0,102,51,.18)'},
+  {id:'nbp',      name:'NBP',            full:'National Bank of Pakistan', abbr:'NBP', color:'#1a5276', bg:'rgba(26,82,118,.18)'},
+  {id:'scb',      name:'Std Chartered',  full:'Standard Chartered Bank',   abbr:'SCB', color:'#1d70b8', bg:'rgba(29,112,184,.18)'},
+  {id:'easypaisa',name:'Easypaisa',      full:'Easypaisa Mobile Wallet',   abbr:'EP',  color:'#5db130', bg:'rgba(93,177,48,.18)'},
+  {id:'jazzcash', name:'JazzCash',       full:'JazzCash Mobile Account',   abbr:'JC',  color:'#e87722', bg:'rgba(232,119,34,.18)'},
+  {id:'nayapay',  name:'NayaPay',        full:'NayaPay Digital Wallet',    abbr:'NP',  color:'#7c3aed', bg:'rgba(124,58,237,.18)'},
+  {id:'sadapay',  name:'SadaPay',        full:'SadaPay Digital Bank',      abbr:'SP',  color:'#0ea5e9', bg:'rgba(14,165,233,.18)'},
+  {id:'faysal',   name:'Faysal Bank',    full:'Faysal Bank Limited',       abbr:'FB',  color:'#b45309', bg:'rgba(180,83,9,.18)'},
+  {id:'bankislami',name:'BankIslami',    full:'BankIslami Pakistan Ltd',   abbr:'BI',  color:'#065f46', bg:'rgba(6,95,70,.18)'},
+  {id:'soneri',   name:'Soneri Bank',    full:'Soneri Bank Limited',       abbr:'SB',  color:'#92400e', bg:'rgba(146,64,14,.18)'},
+  {id:'askari',   name:'Askari Bank',    full:'Askari Bank Limited',       abbr:'AK',  color:'#1e3a5f', bg:'rgba(30,58,95,.18)'},
+];
+
+const BASE_RATES = {PKR:1,USD:0.003597,EUR:0.003311,GBP:0.002833,AED:0.013209,SAR:0.013477,CAD:0.004926,AUD:0.005556};
+const CUR_SYM = {PKR:'PKR ',USD:'$ ',EUR:'€ ',GBP:'£ ',AED:'AED ',SAR:'SAR ',CAD:'CA$ ',AUD:'A$ '};
+const CUR_LIST = ['PKR','USD','EUR','GBP','AED','SAR','CAD','AUD'];
+const RECURRING_KW = ['netflix','spotify','youtube premium','amazon prime','hbo','disney','gym','subscription','monthly fee','apple music','prime'];
+const CAT_COLORS = {Income:'#22c55e',Groceries:'#f97316',Transport:'#06b6d4',Utilities:'#f59e0b',Entertainment:'#ec4899',Dining:'#a78bfa',Health:'#22d3ee',Shopping:'#fb7185',Housing:'#6366f1',Transfer:'#94a3b8',Other:'#64748b'};
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+const S = {
+  activeTab: 'home',
+  displayCurrency: 'PKR',
+  rates: {...BASE_RATES},
+  ratesTs: Date.now(),
+  statementPeriod: 'month',
+  transferStep: 1,
+  transferDraft: {fromId:'', toId:'', amount:'', purpose:''},
+
+  monoWallet: {
+    balance: 15000,
+    card: {masked:'4532 •••• •••• 8847', full:'4532187492118847', cvv:'392', expiry:'08/28', holder:'FARHAN NAZ', revealed:false, frozen:false}
+  },
+
+  accounts: [
+    {id:'hbl_001',      bankId:'hbl',      bankName:'HBL',      type:'Current',      no:'****4521', balance:285400, color:'#00a651', abbr:'HBL', linked:'2024-10-15'},
+    {id:'meezan_001',   bankId:'meezan',   bankName:'Meezan',   type:'Savings',      no:'****7832', balance:142750, color:'#c8102e', abbr:'MB',  linked:'2024-11-02'},
+    {id:'easypaisa_001',bankId:'easypaisa',bankName:'Easypaisa',type:'Mobile Wallet',no:'****1234', balance:8350,   color:'#5db130', abbr:'EP',  linked:'2024-12-01'},
+  ],
+
+  transactions: [
+    {id:'tx001',date:'2026-05-30',desc:'Salary Credit',         amount:180000, type:'credit',category:'Income',      accId:'hbl_001',      emoji:'💰'},
+    {id:'tx002',date:'2026-05-29',desc:'Imtiaz Superstore',     amount:-4200,  type:'debit', category:'Groceries',   accId:'hbl_001',      emoji:'🛒'},
+    {id:'tx003',date:'2026-05-28',desc:'Uber Ride',             amount:-850,   type:'debit', category:'Transport',   accId:'easypaisa_001',emoji:'🚗'},
+    {id:'tx004',date:'2026-05-27',desc:'LESCO Electricity',     amount:-3200,  type:'debit', category:'Utilities',   accId:'hbl_001',      emoji:'⚡'},
+    {id:'tx005',date:'2026-05-26',desc:'Freelance Payment',     amount:45000,  type:'credit',category:'Income',      accId:'meezan_001',   emoji:'💻'},
+    {id:'tx006',date:'2026-05-25',desc:'Netflix Subscription',  amount:-1100,  type:'debit', category:'Entertainment',accId:'easypaisa_001',emoji:'🎬'},
+    {id:'tx007',date:'2026-05-24',desc:'Dominos Pizza',         amount:-1850,  type:'debit', category:'Dining',      accId:'easypaisa_001',emoji:'🍕'},
+    {id:'tx008',date:'2026-05-23',desc:'Apollo Clinic Visit',   amount:-2500,  type:'debit', category:'Health',      accId:'hbl_001',      emoji:'🏥'},
+    {id:'tx009',date:'2026-05-22',desc:'Amazon Laptop Order',   amount:-62000, type:'debit', category:'Shopping',    accId:'hbl_001',      emoji:'📦'},
+    {id:'tx010',date:'2026-05-21',desc:'Monthly Rent',          amount:-45000, type:'debit', category:'Housing',     accId:'hbl_001',      emoji:'🏠'},
+    {id:'tx011',date:'2026-05-20',desc:'Espresso Bar Coffee',   amount:-420,   type:'debit', category:'Dining',      accId:'easypaisa_001',emoji:'☕'},
+    {id:'tx012',date:'2026-05-19',desc:'Spotify Premium',       amount:-550,   type:'debit', category:'Entertainment',accId:'easypaisa_001',emoji:'🎵'},
+    {id:'tx013',date:'2026-05-18',desc:'Careem Ride',           amount:-780,   type:'debit', category:'Transport',   accId:'easypaisa_001',emoji:'🚕'},
+    {id:'tx014',date:'2026-05-17',desc:'Naheed Supermarket',    amount:-3100,  type:'debit', category:'Groceries',   accId:'meezan_001',   emoji:'🛍️'},
+    {id:'tx015',date:'2026-05-16',desc:'MonoWallet Top-up',     amount:15000,  type:'topup', category:'Transfer',    accId:'monoWallet',   emoji:'💳'},
+    {id:'tx016',date:'2026-05-10',desc:'Sui Gas Bill',          amount:-1800,  type:'debit', category:'Utilities',   accId:'hbl_001',      emoji:'🔥'},
+    {id:'tx017',date:'2026-05-08',desc:'KFC Family Bucket',     amount:-3900,  type:'debit', category:'Dining',      accId:'easypaisa_001',emoji:'🍗'},
+    {id:'tx018',date:'2026-05-05',desc:'Petrol – PSO',          amount:-5200,  type:'debit', category:'Transport',   accId:'hbl_001',      emoji:'⛽'},
+    {id:'tx019',date:'2026-05-03',desc:'Zara Shopping',         amount:-18500, type:'debit', category:'Shopping',    accId:'meezan_001',   emoji:'👗'},
+    {id:'tx020',date:'2026-05-01',desc:'Salary Credit',         amount:180000, type:'credit',category:'Income',      accId:'hbl_001',      emoji:'💰'},
+  ],
+
+  debts: [
+    {id:'d001',label:'Suzuki Cultus Loan',   total:1200000,paid:420000, due:'2028-06-01',type:'loan',    dir:'owe',  apr:22.5},
+    {id:'d002',label:'Ahmed Bhai – Personal',total:25000,  paid:0,      due:'2026-06-15',type:'personal',dir:'owe',  apr:0},
+    {id:'d003',label:'Lent to Bilal',        total:10000,  paid:5000,   due:'2026-07-01',type:'personal',dir:'lent', apr:0},
+  ],
+
+  monthlyIncome: 180000,
+  monthlyChart: [
+    {m:'Dec',inc:160000,exp:98000},{m:'Jan',inc:180000,exp:112000},{m:'Feb',inc:180000,exp:89500},
+    {m:'Mar',inc:195000,exp:125000},{m:'Apr',inc:180000,exp:107000},{m:'May',inc:225000,exp:58000},
+  ],
+
+  modal: {active:null, step:1, data:{}},
+  _id: 3000,
+  uid(){ return 'x'+(this._id++) },
+};
+
+// ═══════════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════════
+const netWealth = () => S.accounts.reduce((s,a)=>s+a.balance,0) + S.monoWallet.balance;
+const getAcc = id => S.accounts.find(a=>a.id===id);
+
+function getAccName(id){
+  if(id==='monoWallet') return 'MonoWallet';
+  const a = getAcc(id); return a ? `${a.bankName} ${a.type}` : id;
+}
+function getAccBal(id){
+  if(id==='monoWallet') return S.monoWallet.balance;
+  const a = getAcc(id); return a ? a.balance : 0;
+}
+
+function fmtAmt(pkr, currency){
+  currency = currency || S.displayCurrency;
+  const val = pkr * S.rates[currency];
+  const sym = CUR_SYM[currency];
+  if(currency==='PKR') return sym + Math.round(val).toLocaleString('en-PK');
+  return sym + val.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fmtPKR(n){ return 'PKR '+Math.abs(Math.round(n)).toLocaleString('en-PK'); }
+function fmtDate(ds){
+  const d = new Date(ds);
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function secsAgo(ts){ return Math.floor((Date.now()-ts)/1000); }
+
+// Smart transaction classification
+function classifyTx(tx){
+  if(tx.amount >= 0) return [];
+  const flags = [];
+  const amt = Math.abs(tx.amount);
+  const dl = tx.desc.toLowerCase();
+  if(amt >= 20000) flags.push({cls:'flag-large', label:'Large Purchase'});
+  if(RECURRING_KW.some(k=>dl.includes(k))) flags.push({cls:'flag-rec', label:'Recurring'});
+  const peers = S.transactions.filter(t=>t.category===tx.category && t.id!==tx.id && t.amount<0);
+  if(peers.length >= 2){
+    const avg = peers.reduce((s,t)=>s+Math.abs(t.amount),0)/peers.length;
+    if(avg>100 && amt > avg*2.2) flags.push({cls:'flag-unusual', label:`${(amt/avg).toFixed(1)}× avg`});
+  }
+  return flags;
+}
+
+function smartSort(txns){
+  const flagged = [], normal = [];
+  txns.forEach(tx=>{
+    const f = classifyTx(tx);
+    if(f.length) flagged.push({tx,flags:f});
+    else normal.push({tx,flags:[]});
+  });
+  flagged.sort((a,b)=>Math.abs(b.tx.amount)-Math.abs(a.tx.amount));
+  normal.sort((a,b)=>b.tx.date.localeCompare(a.tx.date));
+  return {flagged,normal};
+}
+
+function stmtTxns(){
+  const now = new Date();
+  let cutoff;
+  if(S.statementPeriod==='week') cutoff = new Date(Date.now()-7*864e5);
+  else if(S.statementPeriod==='3month') cutoff = new Date(Date.now()-90*864e5);
+  else cutoff = new Date(now.getFullYear(), now.getMonth(), 1);
+  return S.transactions.filter(t=>new Date(t.date)>=cutoff).sort((a,b)=>b.date.localeCompare(a.date));
+}
+
+// ═══════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════
+function switchTab(name){
+  S.activeTab = name;
+  document.querySelectorAll('.tab-panel').forEach(el=>{
+    el.classList.toggle('active', el.id==='tab-'+name);
+  });
+  document.querySelectorAll('.nav-btn').forEach(el=>{
+    el.classList.toggle('active', el.dataset.tab===name);
+  });
+  renderTab(name);
+}
+
+function renderBottomNav(){
+  document.getElementById('bottom-nav').innerHTML = `
+    ${navBtn('home','Home','<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>')}
+    ${navBtn('accounts','Accounts','<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>')}
+    <button class="nav-fab" data-action="openModal" data-modal="transfer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></button>
+    ${navBtn('spending','Spending','<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>')}
+    ${navBtn('more','More','<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>')}
+  `;
+}
+function navBtn(tab,label,pathD){
+  const act = S.activeTab===tab ? ' active':'';
+  return `<button class="nav-btn${act}" data-action="switchTab" data-tab="${tab}"><svg viewBox="0 0 24 24">${pathD}</svg>${label}</button>`;
+}
+
+function renderTab(name){
+  if(name==='home')     renderHome();
+  if(name==='accounts') renderAccounts();
+  if(name==='transfer') renderTransfer();
+  if(name==='spending') renderSpending();
+  if(name==='more')     renderMore();
+}
+
+// ═══════════════════════════════════════════════════════
+//  HOME TAB
+// ═══════════════════════════════════════════════════════
+function renderHome(){
+  const el = document.getElementById('tab-home');
+  const nw = netWealth();
+  const now = new Date();
+  const greeting = now.getHours()<12?'Good morning':now.getHours()<17?'Good afternoon':'Good evening';
+  const dow = now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+  el.innerHTML = `
+    <div style="margin-bottom:18px">
+      <p style="font-size:13px;color:var(--text2);font-weight:500">${greeting} 👋</p>
+      <h1 style="font-size:25px;font-weight:800;letter-spacing:-.03em;line-height:1.2">Farhan Naz</h1>
+      <p style="font-size:12px;color:var(--text3);margin-top:2px">${dow}</p>
+    </div>
+
+    <!-- Net Wealth Card -->
+    <div class="wealth-card" style="margin-bottom:18px">
+      <p style="font-size:11px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px;position:relative">Total Net Wealth</p>
+      <p id="nw-display" data-pkr="${nw}" style="font-size:38px;font-weight:800;letter-spacing:-.04em;color:#fff;position:relative;min-height:46px;transition:opacity .2s">${fmtAmt(nw)}</p>
+      <p style="font-size:12px;color:rgba(255,255,255,.45);margin:4px 0 14px;position:relative">Across ${S.accounts.length} banks + MonoWallet</p>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;position:relative;margin-bottom:12px">
+        ${CUR_LIST.map(c=>`<button class="cur-pill${c===S.displayCurrency?' active':''}" data-action="switchCur" data-cur="${c}">${c}</button>`).join('')}
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;position:relative">
+        <div style="display:flex;align-items:center;gap:5px">
+          <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block;animation:pulse 2s infinite"></span>
+          <span style="font-size:11px;color:rgba(255,255,255,.5)">Live rates</span>
+        </div>
+        <span id="rate-ts" style="font-size:11px;color:rgba(255,255,255,.4)">${secsAgo(S.ratesTs)}s ago</span>
+      </div>
+    </div>
+    <style>@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}</style>
+
+    <!-- MonoWallet mini card -->
+    <div class="mono-card" style="margin-bottom:18px">
+      <div style="position:relative">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <p style="font-size:11px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.06em;text-transform:uppercase">MonoWallet</p>
+            <p style="font-size:26px;font-weight:800;color:#fff;letter-spacing:-.02em;margin-top:2px">${fmtPKR(S.monoWallet.balance)}</p>
+          </div>
+          <div style="font-size:32px">💳</div>
+        </div>
+        <p style="font-size:13px;color:rgba(255,255,255,.5);margin-top:6px;font-family:monospace;letter-spacing:.08em">${S.monoWallet.card.masked}</p>
+      </div>
+      <div style="display:flex;gap:8px;position:relative">
+        <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border-radius:10px;border:1px solid rgba(255,255,255,.2)" data-action="openModal" data-modal="topup">＋ Top Up</button>
+        <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border-radius:10px;border:1px solid rgba(255,255,255,.2)" data-action="openModal" data-modal="virtualCard">Card Details</button>
+        <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border-radius:10px;border:1px solid rgba(255,255,255,.2)" data-action="openModal" data-modal="qr">📲 QR</button>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div style="display:flex;justify-content:space-around;margin-bottom:22px">
+      <div class="qa" data-action="openModal" data-modal="transfer">
+        <div class="qa-icon" style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.22)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></div>
+        <span>Send</span>
+      </div>
+      <div class="qa" data-action="openModal" data-modal="linkBank">
+        <div class="qa-icon" style="background:rgba(20,184,166,.15);border:1px solid rgba(20,184,166,.22)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
+        <span>Add Bank</span>
+      </div>
+      <div class="qa" data-action="switchTab" data-tab="spending">
+        <div class="qa-icon" style="background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.22)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div>
+        <span>Spending</span>
+      </div>
+      <div class="qa" data-action="switchTab" data-tab="more">
+        <div class="qa-icon" style="background:rgba(236,72,153,.15);border:1px solid rgba(236,72,153,.22)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+        <span>More</span>
+      </div>
+    </div>
+
+    <!-- Hero Statement -->
+    ${renderHeroStatement()}
+  `;
+}
+
+function renderHeroStatement(){
+  const txns = stmtTxns();
+  const totalIn  = txns.filter(t=>t.amount>0).reduce((s,t)=>s+t.amount,0);
+  const totalOut = txns.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0);
+  const net      = totalIn - totalOut;
+
+  const periods = [{k:'week',l:'This Week'},{k:'month',l:'This Month'},{k:'3month',l:'3 Months'}];
+
+  const rows = txns.slice(0,20).map(tx=>{
+    const acc = tx.accId==='monoWallet' ? {abbr:'MW',color:'#6366f1',bankName:'MonoWallet'} : (getAcc(tx.accId)||{abbr:'?',color:'#64748b',bankName:'?'});
+    const amt = tx.amount;
+    const col = amt>=0 ? '#4ade80' : '#f87171';
+    const sign= amt>=0 ? '+' : '-';
+    return `<div class="tx-row">
+      <div class="tx-icon" style="background:rgba(255,255,255,.05)">${tx.emoji}</div>
+      <div style="flex:1;min-width:0">
+        <p style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.desc}</p>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+          <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px;background:${acc.color}22;color:${acc.color}">${acc.abbr}</span>
+          <span style="font-size:11px;color:var(--text3)">${fmtDate(tx.date)}</span>
+        </div>
+      </div>
+      <p style="font-size:14px;font-weight:800;color:${col};flex-shrink:0">${sign}${fmtPKR(Math.abs(amt))}</p>
+    </div>`;
+  }).join('');
+
+  return `
+    <div style="margin-bottom:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <h2 style="font-size:16px;font-weight:800">Activity Statement</h2>
+        <div style="display:flex;gap:4px">
+          ${periods.map(p=>`<button class="btn-ghost btn-xs${S.statementPeriod===p.k?' active':''}" style="${S.statementPeriod===p.k?'color:var(--text1);background:rgba(255,255,255,.08)':''}" data-action="setPeriod" data-period="${p.k}">${p.l}</button>`).join('')}
+        </div>
+      </div>
+
+      <!-- Summary row -->
+      <div class="glass" style="padding:14px;margin-bottom:12px;border-radius:14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div style="text-align:center">
+            <p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">In</p>
+            <p style="font-size:14px;font-weight:800;color:#4ade80">+${fmtPKR(totalIn)}</p>
+          </div>
+          <div style="text-align:center;border-left:1px solid var(--border);border-right:1px solid var(--border)">
+            <p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Out</p>
+            <p style="font-size:14px;font-weight:800;color:#f87171">-${fmtPKR(totalOut)}</p>
+          </div>
+          <div style="text-align:center">
+            <p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Net</p>
+            <p style="font-size:14px;font-weight:800;color:${net>=0?'#4ade80':'#f87171'}">${net>=0?'+':''}${fmtPKR(net)}</p>
+          </div>
+        </div>
+        <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:10px;border-top:1px solid var(--border);padding-top:8px">Net wealth changed by <strong style="color:${net>=0?'#4ade80':'#f87171'}">${net>=0?'+':''}${fmtPKR(net)}</strong> ${S.statementPeriod==='week'?'this week':S.statementPeriod==='month'?'this month':'in 3 months'}</p>
+      </div>
+
+      <div class="glass" style="padding:4px 14px">
+        ${rows || '<p style="text-align:center;padding:20px;color:var(--text3);font-size:13px">No transactions in this period</p>'}
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════
+//  ACCOUNTS TAB
+// ═══════════════════════════════════════════════════════
+function renderAccounts(){
+  const el = document.getElementById('tab-accounts');
+  el.innerHTML = `
+    <h1 style="font-size:22px;font-weight:800;letter-spacing:-.03em;margin-bottom:4px">My Accounts</h1>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:18px">All linked banks + MonoWallet</p>
+
+    <!-- MonoWallet Card -->
+    <div class="mono-card" style="margin-bottom:16px">
+      <div style="position:relative">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <p style="font-size:11px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.06em;text-transform:uppercase">MonoWallet</p>
+            <p style="font-size:28px;font-weight:800;color:#fff;margin-top:3px">${fmtPKR(S.monoWallet.balance)}</p>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:28px">💳</div>
+            ${S.monoWallet.card.frozen?'<span class="badge" style="background:rgba(239,68,68,.2);color:#fca5a5;margin-top:4px;display:block">FROZEN</span>':''}
+          </div>
+        </div>
+        <p style="font-size:13px;color:rgba(255,255,255,.45);margin-top:8px;font-family:monospace;letter-spacing:.1em">${S.monoWallet.card.masked}</p>
+        <p style="font-size:11px;color:rgba(255,255,255,.4);margin-top:2px">${S.monoWallet.card.holder} · ${S.monoWallet.card.expiry}</p>
+      </div>
+      <div style="display:flex;gap:8px;position:relative;flex-wrap:wrap">
+        <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.2)" data-action="openModal" data-modal="topup">＋ Top Up</button>
+        <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.2)" data-action="openModal" data-modal="virtualCard">🔐 Card Details</button>
+        <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.2)" data-action="openModal" data-modal="qr">📲 Receive QR</button>
+      </div>
+    </div>
+
+    <!-- Linked accounts -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <h2 style="font-size:15px;font-weight:800">Linked Banks</h2>
+      <button class="btn-ghost btn-sm" data-action="openModal" data-modal="linkBank">＋ Link Account</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px">
+      ${S.accounts.length ? S.accounts.map(accCardHTML).join('') : '<div class="glass" style="padding:24px;text-align:center"><p style="color:var(--text3);font-size:13px;margin-bottom:12px">No banks linked yet</p><button class="btn btn-primary btn-sm" data-action="openModal" data-modal="linkBank">＋ Link your first bank</button></div>'}
+    </div>
+
+    <button class="btn btn-secondary" style="width:100%;border-style:dashed" data-action="openModal" data-modal="linkBank">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Link New Bank Account
+    </button>
+  `;
+}
+
+function accCardHTML(a){
+  const recentTxns = S.transactions.filter(t=>t.accId===a.id).slice(0,3);
+  return `
+    <div class="acc-card" style="background:linear-gradient(135deg,${a.color}22,${a.color}11);border:1px solid ${a.color}33">
+      <div style="display:flex;align-items:center;justify-content:space-between;position:relative">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:40px;height:40px;border-radius:11px;background:${a.color}22;border:1px solid ${a.color}44;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:${a.color}">${a.abbr}</div>
+          <div>
+            <p style="font-size:14px;font-weight:800">${a.bankName}</p>
+            <p style="font-size:11px;color:var(--text2)">${a.type} · ${a.no}</p>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <p style="font-size:18px;font-weight:800;color:#fff">${fmtPKR(a.balance)}</p>
+          <p style="font-size:10px;color:var(--text3)">Available</p>
+        </div>
+      </div>
+      ${recentTxns.length ? `
+        <div style="border-top:1px solid rgba(255,255,255,.06);padding-top:10px;position:relative">
+          <p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Recent</p>
+          ${recentTxns.map(t=>`
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0">
+              <div style="display:flex;align-items:center;gap:7px">
+                <span style="font-size:14px">${t.emoji}</span>
+                <span style="font-size:12px;color:var(--text2);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.desc}</span>
+              </div>
+              <span style="font-size:12px;font-weight:700;color:${t.amount>=0?'#4ade80':'#f87171'};flex-shrink:0">${t.amount>=0?'+':''}${fmtPKR(Math.abs(t.amount))}</span>
+            </div>
+          `).join('')}
+        </div>` : ''}
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════
+//  TRANSFER TAB
+// ═══════════════════════════════════════════════════════
+function renderTransfer(){
+  const el = document.getElementById('tab-transfer');
+  if(S.transferStep===1) el.innerHTML = transferStep1();
+  else if(S.transferStep===2) el.innerHTML = transferStep2();
+  else el.innerHTML = transferStep3();
+}
+
+function allAccOptions(exclude=''){
+  const opts = [{id:'monoWallet',label:'MonoWallet',bal:S.monoWallet.balance,color:'#6366f1'}];
+  S.accounts.forEach(a=>opts.push({id:a.id,label:`${a.bankName} ${a.type}`,bal:a.balance,color:a.color}));
+  return opts.filter(o=>o.id!==exclude).map(o=>
+    `<option value="${o.id}">${o.label} — ${fmtPKR(o.bal)}</option>`
+  ).join('');
+}
+
+function transferStep1(){
+  const recent = S.transactions.filter(t=>t.category==='Transfer').slice(0,4);
+  return `
+    <h1 style="font-size:22px;font-weight:800;letter-spacing:-.03em;margin-bottom:4px">Transfer Funds</h1>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:18px">Move money between your accounts instantly</p>
+
+    <div class="glass" style="padding:18px;margin-bottom:20px">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <label class="lbl">From</label>
+          <select class="field" id="tr-from" onchange="onTrFromChange()">
+            <option value="">— Select source account —</option>
+            ${allAccOptions()}
+          </select>
+          <p id="tr-from-bal" style="font-size:11px;color:var(--text3);margin-top:4px"></p>
+        </div>
+
+        <div style="display:flex;justify-content:center">
+          <button class="btn-icon" style="border-radius:50%" data-action="swapAccounts" title="Swap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="7 16 3 12 7 8"/><polyline points="17 8 21 12 17 16"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
+          </button>
+        </div>
+
+        <div>
+          <label class="lbl">To</label>
+          <select class="field" id="tr-to">
+            <option value="">— Select destination —</option>
+            ${allAccOptions()}
+          </select>
+        </div>
+
+        <div>
+          <label class="lbl">Amount (PKR)</label>
+          <input class="field" type="number" id="tr-amount" placeholder="0.00" min="1" step="0.01" value="${S.transferDraft.amount||''}"/>
+        </div>
+
+        <div>
+          <label class="lbl">Purpose / Note (optional)</label>
+          <input class="field" type="text" id="tr-purpose" placeholder="e.g. Monthly expenses" value="${S.transferDraft.purpose||''}"/>
+        </div>
+
+        <div id="tr-warn" style="display:none;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:10px 13px;font-size:12px;color:#fcd34d">
+          ⚠️ High-value transfer (> PKR 500,000). This may require additional review.
+        </div>
+
+        <button class="btn btn-primary" style="width:100%" data-action="reviewTransfer">
+          Review Transfer
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+
+    ${recent.length ? `
+    <h2 style="font-size:15px;font-weight:800;margin-bottom:10px">Recent Transfers</h2>
+    <div class="glass" style="padding:4px 14px">
+      ${recent.map(t=>`
+        <div class="tx-row">
+          <div class="tx-icon" style="background:rgba(99,102,241,.1)">${t.emoji}</div>
+          <div style="flex:1;min-width:0">
+            <p style="font-size:13px;font-weight:600">${t.desc}</p>
+            <p style="font-size:11px;color:var(--text3)">${fmtDate(t.date)}</p>
+          </div>
+          <p style="font-size:13px;font-weight:800;color:${t.amount>=0?'#4ade80':'#f87171'}">${t.amount>=0?'+':''}${fmtPKR(Math.abs(t.amount))}</p>
+        </div>`).join('')}
+    </div>` : ''}
+  `;
+}
+
+function transferStep2(){
+  const d = S.transferDraft;
+  return `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+      <button class="btn-icon" data-action="backTransfer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </button>
+      <h1 style="font-size:22px;font-weight:800;letter-spacing:-.03em">Review Transfer</h1>
+    </div>
+
+    <div class="glass" style="padding:20px;margin-bottom:16px">
+      <p style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px">Transfer Details</p>
+      ${reviewRow('From', getAccName(d.fromId))}
+      ${reviewRow('To', getAccName(d.toId))}
+      ${reviewRow('Amount', fmtPKR(d.amount))}
+      ${d.purpose ? reviewRow('Purpose', d.purpose) : ''}
+      ${reviewRow('Fee', 'PKR 0 (Free)')}
+      ${reviewRow('Processing', 'Instant')}
+    </div>
+
+    <div style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:14px;padding:13px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <p style="font-size:12px;color:#86efac;line-height:1.5">Your transfer is secured with end-to-end encryption. You'll be asked to confirm with your 4-digit PIN.</p>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%;margin-bottom:10px" data-action="openModal" data-modal="pin">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      Confirm with PIN
+    </button>
+    <button class="btn btn-ghost" style="width:100%" data-action="backTransfer">Cancel</button>
+  `;
+}
+
+function reviewRow(lbl,val){
+  return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+    <span style="font-size:13px;color:var(--text2)">${lbl}</span>
+    <span style="font-size:13px;font-weight:700">${val}</span>
+  </div>`;
+}
+
+function transferStep3(){
+  const d = S.transferDraft;
+  return `
+    <div style="text-align:center;padding:40px 20px">
+      <div style="width:72px;height:72px;border-radius:50%;background:rgba(34,197,94,.12);border:2px solid rgba(34,197,94,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:8px">Transfer Successful!</h2>
+      <p style="font-size:14px;color:var(--text2);margin-bottom:6px">${fmtPKR(d.amount)} sent</p>
+      <p style="font-size:13px;color:var(--text3);margin-bottom:30px">${getAccName(d.fromId)} → ${getAccName(d.toId)}</p>
+      <button class="btn btn-primary" style="width:100%;margin-bottom:10px" data-action="newTransfer">Make Another Transfer</button>
+      <button class="btn btn-ghost" style="width:100%" data-action="switchTab" data-tab="home">Back to Home</button>
+    </div>
+  `;
+}
+
+function onTrFromChange(){
+  const sel = document.getElementById('tr-from');
+  const balEl = document.getElementById('tr-from-bal');
+  if(!sel||!balEl) return;
+  const bal = getAccBal(sel.value);
+  balEl.textContent = sel.value ? `Available: ${fmtPKR(bal)}` : '';
+}
+
+// ═══════════════════════════════════════════════════════
+//  SPENDING TAB
+// ═══════════════════════════════════════════════════════
+function renderSpending(){
+  const el = document.getElementById('tab-spending');
+  const thisMonthTxns = S.transactions.filter(t=>{
+    const d = new Date(t.date); const now = new Date();
+    return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+  });
+  const totalInc = thisMonthTxns.filter(t=>t.amount>0).reduce((s,t)=>s+t.amount,0);
+  const totalExp = thisMonthTxns.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0);
+  const {flagged, normal} = smartSort(S.transactions.filter(t=>t.amount<0));
+
+  el.innerHTML = `
+    <h1 style="font-size:22px;font-weight:800;letter-spacing:-.03em;margin-bottom:4px">Spending</h1>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:18px">Insights across all your accounts</p>
+
+    <!-- Monthly summary -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+      <div class="glass" style="padding:16px">
+        <p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">This Month In</p>
+        <p style="font-size:20px;font-weight:800;color:#4ade80">${fmtPKR(totalInc)}</p>
+      </div>
+      <div class="glass" style="padding:16px">
+        <p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">This Month Out</p>
+        <p style="font-size:20px;font-weight:800;color:#f87171">${fmtPKR(totalExp)}</p>
+      </div>
+    </div>
+
+    <!-- Bar chart -->
+    <div class="glass" style="padding:16px;margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h2 style="font-size:14px;font-weight:800">6-Month Overview</h2>
+        <div style="display:flex;gap:10px">
+          <div style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#22c55e;display:inline-block"></span><span style="font-size:10px;color:var(--text3)">Income</span></div>
+          <div style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#6366f1;display:inline-block"></span><span style="font-size:10px;color:var(--text3)">Expenses</span></div>
+        </div>
+      </div>
+      ${barChartSVG()}
+    </div>
+
+    <!-- Donut chart -->
+    <div class="glass" style="padding:16px;margin-bottom:18px">
+      <h2 style="font-size:14px;font-weight:800;margin-bottom:14px">Category Breakdown</h2>
+      ${donutChartHTML()}
+    </div>
+
+    <!-- Log expense -->
+    <div class="glass" style="padding:16px;margin-bottom:18px">
+      <h2 style="font-size:14px;font-weight:800;margin-bottom:14px">Log an Expense</h2>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input class="field" type="text" id="exp-desc" placeholder="Description"/>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <input class="field" type="number" id="exp-amt" placeholder="Amount (PKR)" min="0" step="0.01"/>
+          <input class="field" type="date" id="exp-date" value="${new Date().toISOString().slice(0,10)}"/>
+        </div>
+        <select class="field" id="exp-cat">
+          <option value="">Category</option>
+          ${Object.keys(CAT_COLORS).filter(c=>c!=='Income'&&c!=='Transfer').map(c=>`<option value="${c}">${c}</option>`).join('')}
+        </select>
+        <select class="field" id="exp-acc">
+          <option value="">From account</option>
+          <option value="monoWallet">MonoWallet</option>
+          ${S.accounts.map(a=>`<option value="${a.id}">${a.bankName} ${a.type}</option>`).join('')}
+        </select>
+        <button class="btn btn-primary btn-sm" style="width:100%" data-action="addExpense">＋ Add Expense</button>
+      </div>
+    </div>
+
+    <!-- Smart sorted transactions -->
+    ${flagged.length ? `
+    <div class="sec-lbl" style="color:var(--amber)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Flagged Transactions
+    </div>
+    <div class="glass" style="padding:4px 14px;margin-bottom:12px">
+      ${flagged.map(({tx,flags})=>txRowHTML(tx,flags)).join('')}
+    </div>` : ''}
+
+    <div class="sec-lbl" style="color:var(--text3)">Regular Activity</div>
+    <div class="glass" style="padding:4px 14px;margin-bottom:8px">
+      ${normal.length ? normal.map(({tx})=>txRowHTML(tx,[])).join('') : '<p style="text-align:center;padding:20px;color:var(--text3);font-size:13px">No transactions yet</p>'}
+    </div>
+  `;
+}
+
+function txRowHTML(tx, flags){
+  const col = tx.amount>=0?'#4ade80':'#f87171';
+  const sign = tx.amount>=0?'+':'-';
+  const chipHTML = flags.map(f=>`<span class="flag-chip ${f.cls}">${f.label}</span>`).join('');
+  return `<div class="tx-row">
+    <div class="tx-icon" style="background:${CAT_COLORS[tx.category]||'#64748b'}18">${tx.emoji}</div>
+    <div style="flex:1;min-width:0">
+      <p style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.desc}</p>
+      <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--text3)">${fmtDate(tx.date)}</span>
+        ${chipHTML}
+      </div>
+    </div>
+    <div style="text-align:right;flex-shrink:0">
+      <p style="font-size:13px;font-weight:800;color:${col}">${sign}${fmtPKR(Math.abs(tx.amount))}</p>
+      <p style="font-size:10px;color:var(--text3)">${tx.category}</p>
+    </div>
+  </div>`;
+}
+
+function barChartSVG(){
+  const data = S.monthlyChart;
+  const maxVal = Math.max(...data.flatMap(d=>[d.inc,d.exp]));
+  const W=360,H=140,MB=22,UH=H-MB-8;
+  const GW=W/data.length;
+  const BW=Math.floor((GW-14)/2);
+  let rects='';
+  data.forEach((d,i)=>{
+    const x=i*GW+7;
+    const ih=Math.round((d.inc/maxVal)*UH);
+    const eh=Math.round((d.exp/maxVal)*UH);
+    rects+=`<rect x="${x}" y="${H-MB-ih}" width="${BW}" height="${ih}" fill="#22c55e" rx="3" opacity=".75"/>
+    <rect x="${x+BW+3}" y="${H-MB-eh}" width="${BW}" height="${eh}" fill="#6366f1" rx="3" opacity=".75"/>
+    <text x="${x+BW}" y="${H-4}" text-anchor="middle" fill="#475569" font-size="9" font-family="Plus Jakarta Sans,sans-serif">${d.m}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block">${rects}</svg>`;
+}
+
+function donutChartHTML(){
+  const cats = computeCats();
+  const total = cats.reduce((s,c)=>s+c.amt,0);
+  if(!total) return '<p style="color:var(--text3);font-size:13px;text-align:center;padding:16px 0">No expense data yet</p>';
+  const r=65,cx=85,cy=85,sw=22,C=2*Math.PI*r;
+  let offset=0;
+  let segs='';
+  cats.forEach(c=>{
+    const frac=c.amt/total;
+    const dash=(frac*C).toFixed(2);
+    const gap=(C-frac*C).toFixed(2);
+    segs+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c.color}" stroke-width="${sw}" stroke-dasharray="${dash} ${gap}" stroke-dashoffset="${(-offset).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`;
+    offset+=frac*C;
+  });
+  const legend = cats.map(c=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0">
+      <div style="display:flex;align-items:center;gap:7px">
+        <span style="width:10px;height:10px;border-radius:3px;background:${c.color};flex-shrink:0;display:inline-block"></span>
+        <span style="font-size:12px;color:var(--text2)">${c.cat}</span>
+      </div>
+      <span style="font-size:12px;font-weight:700">${fmtPKR(c.amt)}</span>
+    </div>`).join('');
+  return `<div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+    <div style="position:relative;flex-shrink:0">
+      <svg width="${cx*2}" height="${cy*2}" viewBox="0 0 ${cx*2} ${cy*2}">${segs}</svg>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+        <p style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em">Spent</p>
+        <p style="font-size:13px;font-weight:800">${fmtPKR(total)}</p>
+      </div>
+    </div>
+    <div style="flex:1;min-width:130px">${legend}</div>
+  </div>`;
+}
+
+function computeCats(){
+  const map={};
+  S.transactions.filter(t=>t.amount<0&&t.category!=='Transfer').forEach(t=>{
+    map[t.category]=(map[t.category]||0)+Math.abs(t.amount);
+  });
+  return Object.entries(map).map(([cat,amt])=>({cat,amt,color:CAT_COLORS[cat]||'#64748b'}))
+    .sort((a,b)=>b.amt-a.amt).slice(0,7);
+}
+
+// ═══════════════════════════════════════════════════════
+//  MORE TAB
+// ═══════════════════════════════════════════════════════
+function renderMore(){
+  const el = document.getElementById('tab-more');
+  const totalOwed = S.debts.filter(d=>d.dir==='owe').reduce((s,d)=>s+(d.total-d.paid),0);
+  const totalLent = S.debts.filter(d=>d.dir==='lent').reduce((s,d)=>s+(d.total-d.paid),0);
+
+  el.innerHTML = `
+    <h1 style="font-size:22px;font-weight:800;letter-spacing:-.03em;margin-bottom:18px">Payments & More</h1>
+
+    <!-- Debt summary -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+      <div class="glass" style="padding:16px;border-color:rgba(239,68,68,.2)">
+        <p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">You Owe</p>
+        <p style="font-size:20px;font-weight:800;color:#fca5a5">${fmtPKR(totalOwed)}</p>
+      </div>
+      <div class="glass" style="padding:16px;border-color:rgba(34,197,94,.2)">
+        <p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Owed to You</p>
+        <p style="font-size:20px;font-weight:800;color:#86efac">${fmtPKR(totalLent)}</p>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <h2 style="font-size:15px;font-weight:800">Debts & Loans</h2>
+      <button class="btn-ghost btn-sm" onclick="document.getElementById('add-debt-form').style.display=document.getElementById('add-debt-form').style.display==='none'?'flex':'none'">+ Add</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+      ${S.debts.map(debtCardHTML).join('')}
+    </div>
+
+    <!-- Add debt form (hidden by default) -->
+    <div id="add-debt-form" class="glass" style="padding:16px;margin-bottom:18px;display:none;flex-direction:column;gap:10px">
+      <h3 style="font-size:14px;font-weight:800">Add Debt / Loan</h3>
+      <input class="field" type="text" id="debt-label" placeholder="Label (e.g. Car Loan)"/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <input class="field" type="number" id="debt-total" placeholder="Total Amount"/>
+        <input class="field" type="number" id="debt-paid" placeholder="Already Paid" value="0"/>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <input class="field" type="date" id="debt-due"/>
+        <select class="field" id="debt-dir">
+          <option value="owe">I Owe</option>
+          <option value="lent">I Lent</option>
+        </select>
+      </div>
+      <input class="field" type="number" id="debt-apr" placeholder="APR % (0 for interest-free)" value="0"/>
+      <button class="btn btn-primary btn-sm" style="width:100%" data-action="addDebt">Save Debt</button>
+    </div>
+
+    <!-- Settings -->
+    <div class="glass" style="padding:16px;margin-bottom:14px">
+      <h2 style="font-size:14px;font-weight:800;margin-bottom:14px">Settings</h2>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0">F</div>
+        <div>
+          <p style="font-size:15px;font-weight:800">Farhan Naz</p>
+          <p style="font-size:12px;color:var(--text2)">farhan@monowallet.pk</p>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label class="lbl">Monthly Income (PKR)</label>
+        <div style="display:flex;gap:8px">
+          <input class="field" type="number" id="inc-field" value="${S.monthlyIncome}" placeholder="Monthly income"/>
+          <button class="btn btn-secondary btn-sm" data-action="saveIncome">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danger zone -->
+    <div class="glass" style="padding:16px;margin-bottom:8px;border-color:rgba(239,68,68,.18)">
+      <h2 style="font-size:13px;font-weight:800;color:#fca5a5;margin-bottom:10px">Data</h2>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:12px">All data lives in-memory (prototype). Clearing resets balances.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" data-action="clearTxns">Clear Transactions</button>
+        <button class="btn btn-sm" style="background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.2);font-weight:700;border-radius:9px;padding:9px 14px;font-size:13px;cursor:pointer;font-family:inherit" data-action="fullReset">Full Reset</button>
+      </div>
+    </div>
+    <p style="text-align:center;color:var(--text3);font-size:11px;padding:12px 0">MonoWallet Prototype v2.0 · Pakistan Banking Super-App</p>
+  `;
+}
+
+function debtCardHTML(d){
+  const remaining = d.total - d.paid;
+  const pct = Math.round((d.paid/d.total)*100);
+  const now = new Date(); const due = new Date(d.due);
+  const daysLeft = Math.ceil((due-now)/864e5);
+  const urgColor = daysLeft<7?'#fca5a5':daysLeft<30?'#fcd34d':'var(--text3)';
+  const dirColor = d.dir==='owe'?'rgba(239,68,68,.15)':'rgba(34,197,94,.15)';
+  const dirText  = d.dir==='owe'?'YOU OWE':'YOU LENT';
+  const dirTxtC  = d.dir==='owe'?'#fca5a5':'#86efac';
+  return `<div class="glass" style="padding:16px">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+      <div>
+        <span style="font-size:9px;font-weight:800;padding:2px 7px;border-radius:5px;background:${dirColor};color:${dirTxtC};letter-spacing:.06em">${dirText}</span>
+        <p style="font-size:15px;font-weight:800;margin-top:5px">${d.label}</p>
+        ${d.apr>0?`<p style="font-size:11px;color:var(--text3)">APR ${d.apr}%</p>`:''}
+      </div>
+      <div style="text-align:right">
+        <p style="font-size:18px;font-weight:800;color:${d.dir==='owe'?'#fca5a5':'#86efac'}">${fmtPKR(remaining)}</p>
+        <p style="font-size:10px;color:var(--text3)">remaining</p>
+      </div>
+    </div>
+    <div class="prog" style="height:6px;margin-bottom:8px">
+      <div class="prog-fill" style="width:${pct}%;background:${d.dir==='owe'?'#ef4444':'#22c55e'}"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:11px;color:var(--text3)">${pct}% paid · ${fmtPKR(d.total)} total</span>
+      <span style="font-size:11px;color:${urgColor}">Due ${fmtDate(d.due)}</span>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODAL SYSTEM (stubs — full implementation in Part 2)
+// ═══════════════════════════════════════════════════════
+function openModal(name, extraData){
+  S.modal.active = name;
+  S.modal.step   = 1;
+  S.modal.data   = extraData || {};
+  document.getElementById('modal-overlay').classList.add('open');
+  renderModal();
+}
+
+function closeModal(){
+  if(S.modal.data.otpTimer)  clearInterval(S.modal.data.otpTimer);
+  if(S.modal.data.cntTimer)  clearInterval(S.modal.data.cntTimer);
+  S.modal = {active:null, step:1, data:{}};
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function advanceStep(n){
+  S.modal.step = n;
+  renderModal();
+}
+
+function renderModal(){
+  const body = document.getElementById('modal-body');
+  switch(S.modal.active){
+    case 'linkBank':    body.innerHTML = renderLinkBankStep(); break;
+    case 'topup':       body.innerHTML = renderTopupModal(); break;
+    case 'virtualCard': body.innerHTML = renderVirtualCardModal(); break;
+    case 'qr':          body.innerHTML = renderQRModal(); break;
+    case 'pin':         body.innerHTML = renderPINModal(); break;
+    case 'transfer':    S.transferStep=1; S.transferDraft={fromId:'',toId:'',amount:'',purpose:''}; closeModal(); switchTab('transfer'); break;
+    default: body.innerHTML = '';
+  }
+}
+
+// ─── STUBS (replaced in Part 2) ───
+function renderLinkBankStep(){ return `<div style="padding:16px 0 8px;text-align:center"><p style="color:var(--text2);font-size:14px;margin-bottom:16px">Link Bank — coming in Part 2 build</p><button class="btn btn-ghost" onclick="closeModal()">Close</button></div>`; }
+function renderTopupModal(){ return `<div style="padding:16px 0 8px;text-align:center"><p style="color:var(--text2);font-size:14px;margin-bottom:16px">Top-up — coming in Part 2</p><button class="btn btn-ghost" onclick="closeModal()">Close</button></div>`; }
+function renderVirtualCardModal(){ return `<div style="padding:16px 0 8px;text-align:center"><p style="color:var(--text2);font-size:14px;margin-bottom:16px">Virtual Card — coming in Part 2</p><button class="btn btn-ghost" onclick="closeModal()">Close</button></div>`; }
+function renderQRModal(){ return `<div style="padding:16px 0 8px;text-align:center"><p style="color:var(--text2);font-size:14px;margin-bottom:16px">QR Code — coming in Part 2</p><button class="btn btn-ghost" onclick="closeModal()">Close</button></div>`; }
+function renderPINModal(){ return `<div style="padding:16px 0 8px;text-align:center"><p style="color:var(--text2);font-size:14px;margin-bottom:16px">PIN Verify — coming in Part 2</p><button class="btn btn-ghost" onclick="closeModal()">Close</button></div>`; }
+
+// ═══════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════
+function toast(msg, type, dur){
+  type = type||'info'; dur = dur||3200;
+  const colors = {info:'var(--text2)',success:'#4ade80',error:'#f87171',warning:'#fcd34d'};
+  const icons = {info:'ℹ️',success:'✅',error:'❌',warning:'⚠️'};
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.style.color = colors[type]||colors.info;
+  el.innerHTML = `<span>${icons[type]||''}</span><span style="color:var(--text1)">${msg}</span>`;
+  const stack = document.getElementById('toast-stack');
+  if(stack.children.length >= 3) stack.removeChild(stack.firstChild);
+  stack.appendChild(el);
+  setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(),280); }, dur);
+}
+
+// ═══════════════════════════════════════════════════════
+//  RATE SIMULATION
+// ═══════════════════════════════════════════════════════
+function startRates(){
+  setInterval(()=>{
+    Object.keys(S.rates).forEach(c=>{
+      if(c==='PKR') return;
+      S.rates[c] = BASE_RATES[c] * (1 + (Math.random()-.5)*0.01);
+    });
+    S.ratesTs = Date.now();
+    if(S.activeTab==='home'){
+      const disp = document.getElementById('nw-display');
+      const ts   = document.getElementById('rate-ts');
+      if(disp) disp.textContent = fmtAmt(netWealth());
+      if(ts)   ts.textContent   = 'just now';
+    }
+  }, 30000);
+
+  // Update "Xs ago" every second
+  setInterval(()=>{
+    const ts = document.getElementById('rate-ts');
+    if(ts && S.activeTab==='home') ts.textContent = secsAgo(S.ratesTs)+'s ago';
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════════════════
+//  EVENT DELEGATION
+// ═══════════════════════════════════════════════════════
+document.addEventListener('click', e=>{
+  const el = e.target.closest('[data-action]');
+  if(!el) return;
+  const {action, tab, cur, period, modal} = el.dataset;
+
+  switch(action){
+    case 'switchTab':
+      switchTab(tab); break;
+
+    case 'switchCur':
+      S.displayCurrency = cur;
+      document.querySelectorAll('.cur-pill').forEach(p=>p.classList.toggle('active',p.dataset.cur===cur));
+      const nwEl = document.getElementById('nw-display');
+      if(nwEl){
+        nwEl.style.opacity='0.4';
+        setTimeout(()=>{ nwEl.textContent=fmtAmt(netWealth()); nwEl.style.opacity='1'; },180);
+      }
+      break;
+
+    case 'setPeriod':
+      S.statementPeriod = period;
+      if(S.activeTab==='home') renderHome();
+      break;
+
+    case 'openModal':
+      openModal(modal); break;
+
+    case 'closeModal':
+      closeModal(); break;
+
+    case 'showNotif':
+      toast('No new notifications', 'info'); break;
+
+    case 'swapAccounts': {
+      const fr = document.getElementById('tr-from');
+      const to = document.getElementById('tr-to');
+      if(fr&&to){ const t=fr.value; fr.value=to.value; to.value=t; onTrFromChange(); }
+      break;
+    }
+
+    case 'reviewTransfer': {
+      const fr = document.getElementById('tr-from')?.value;
+      const to = document.getElementById('tr-to')?.value;
+      const amt = parseFloat(document.getElementById('tr-amount')?.value);
+      const pur = document.getElementById('tr-purpose')?.value||'';
+      if(!fr||!to){ toast('Select both accounts','error'); break; }
+      if(fr===to){ toast('Source and destination cannot be the same','error'); break; }
+      if(isNaN(amt)||amt<=0){ toast('Enter a valid amount','error'); break; }
+      if(amt>getAccBal(fr)){ toast('Insufficient balance','error'); break; }
+      S.transferDraft = {fromId:fr, toId:to, amount:amt, purpose:pur};
+      S.transferStep = 2;
+      renderTransfer();
+      const warn = document.getElementById('tr-warn');
+      if(warn) warn.style.display = amt>500000 ? 'block' : 'none';
+      break;
+    }
+
+    case 'backTransfer':
+      S.transferStep = 1; renderTransfer(); break;
+
+    case 'newTransfer':
+      S.transferStep = 1; S.transferDraft = {fromId:'',toId:'',amount:'',purpose:''}; renderTransfer(); break;
+
+    case 'addExpense': {
+      const desc = document.getElementById('exp-desc')?.value.trim();
+      const amt  = parseFloat(document.getElementById('exp-amt')?.value);
+      const cat  = document.getElementById('exp-cat')?.value;
+      const acc  = document.getElementById('exp-acc')?.value;
+      const date = document.getElementById('exp-date')?.value || new Date().toISOString().slice(0,10);
+      if(!desc||isNaN(amt)||amt<=0||!cat||!acc){ toast('Fill in all fields','error'); break; }
+      const emojiMap = {Groceries:'🛒',Transport:'🚗',Utilities:'⚡',Entertainment:'🎬',Dining:'🍽️',Health:'🏥',Shopping:'🛍️',Housing:'🏠',Other:'💸'};
+      S.transactions.unshift({id:S.uid(),date,desc,amount:-amt,type:'debit',category:cat,accId:acc,emoji:emojiMap[cat]||'💸'});
+      toast('Expense added','success');
+      renderSpending();
+      break;
+    }
+
+    case 'addDebt': {
+      const label = document.getElementById('debt-label')?.value.trim();
+      const total = parseFloat(document.getElementById('debt-total')?.value);
+      const paid  = parseFloat(document.getElementById('debt-paid')?.value)||0;
+      const due   = document.getElementById('debt-due')?.value;
+      const dir   = document.getElementById('debt-dir')?.value||'owe';
+      const apr   = parseFloat(document.getElementById('debt-apr')?.value)||0;
+      if(!label||isNaN(total)||total<=0){ toast('Enter label and amount','error'); break; }
+      S.debts.push({id:S.uid(),label,total,paid,due,dir,apr,type:'loan'});
+      toast('Debt added','success');
+      renderMore();
+      break;
+    }
+
+    case 'saveIncome': {
+      const v = parseFloat(document.getElementById('inc-field')?.value);
+      if(isNaN(v)||v<0){ toast('Enter a valid amount','error'); break; }
+      S.monthlyIncome = v;
+      toast('Income saved','success');
+      break;
+    }
+
+    case 'clearTxns':
+      S.transactions = [];
+      toast('Transactions cleared','info');
+      if(S.activeTab==='more') renderMore();
+      if(S.activeTab==='spending') renderSpending();
+      if(S.activeTab==='home') renderHome();
+      break;
+
+    case 'fullReset':
+      S.transactions=[]; S.debts=[]; S.monoWallet.balance=0; S.accounts=[];
+      toast('Reset complete','info');
+      renderTab(S.activeTab);
+      break;
+  }
+});
+
+// Close modal on overlay click
+document.getElementById('modal-overlay').addEventListener('click', e=>{
+  if(e.target===document.getElementById('modal-overlay')) closeModal();
+});
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+function init(){
+  renderBottomNav();
+  renderHome();
+  startRates();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
