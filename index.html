@@ -47,11 +47,13 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text1);dis
 
 /* wealth card */
 .wealth-card{border-radius:22px;padding:22px 22px 18px;background:linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#3730a3 100%);position:relative;overflow:hidden}
-.wealth-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 10%,rgba(255,255,255,.07),transparent 60%),radial-gradient(ellipse at 10% 90%,rgba(255,255,255,.04),transparent 55%)}
+.wealth-card::before{content:'';position:absolute;inset:0;z-index:0;background:radial-gradient(ellipse at 80% 10%,rgba(255,255,255,.07),transparent 60%),radial-gradient(ellipse at 10% 90%,rgba(255,255,255,.04),transparent 55%);pointer-events:none}
+.wealth-card>*{position:relative;z-index:1}
 
 /* mono card */
 .mono-card{border-radius:20px;padding:22px;background:linear-gradient(135deg,#312e81,#4f46e5 50%,#7c3aed);position:relative;overflow:hidden;min-height:150px;display:flex;flex-direction:column;justify-content:space-between}
-.mono-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 75% 15%,rgba(255,255,255,.1),transparent 55%)}
+.mono-card::before{content:'';position:absolute;inset:0;z-index:0;background:radial-gradient(ellipse at 75% 15%,rgba(255,255,255,.1),transparent 55%);pointer-events:none}
+.mono-card>*{position:relative;z-index:1}
 
 /* account card */
 .acc-card{border-radius:18px;padding:20px;position:relative;overflow:hidden;cursor:pointer;transition:transform .18s,box-shadow .18s;display:flex;flex-direction:column;gap:12px}
@@ -400,13 +402,13 @@ function renderHome(){
 
     <!-- Net Wealth Card -->
     <div class="wealth-card" style="margin-bottom:18px">
-      <p style="font-size:11px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px;position:relative">Total Net Wealth</p>
-      <p id="nw-display" data-pkr="${nw}" style="font-size:38px;font-weight:800;letter-spacing:-.04em;color:#fff;position:relative;min-height:46px;transition:opacity .2s">${fmtAmt(nw)}</p>
-      <p style="font-size:12px;color:rgba(255,255,255,.45);margin:4px 0 14px;position:relative">Across ${S.accounts.length} banks + MonoWallet</p>
-      <div style="display:flex;flex-wrap:wrap;gap:5px;position:relative;margin-bottom:12px">
+      <p style="font-size:11px;font-weight:700;color:rgba(255,255,255,.6);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px">Total Net Wealth</p>
+      <p id="nw-display" data-pkr="${nw}" style="font-size:38px;font-weight:800;letter-spacing:-.04em;color:#fff;min-height:46px;line-height:1.1;transition:opacity .2s">${fmtAmt(nw)}</p>
+      <p style="font-size:12px;color:rgba(255,255,255,.55);margin:4px 0 14px">Across ${S.accounts.length + 1} accounts</p>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">
         ${CUR_LIST.map(c=>`<button class="cur-pill${c===S.displayCurrency?' active':''}" data-action="switchCur" data-cur="${c}">${c}</button>`).join('')}
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;position:relative">
+      <div style="display:flex;align-items:center;justify-content:space-between">
         <div style="display:flex;align-items:center;gap:5px">
           <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block;animation:pulse 2s infinite"></span>
           <span style="font-size:11px;color:rgba(255,255,255,.5)">Live rates</span>
@@ -418,7 +420,7 @@ function renderHome(){
 
     <!-- MonoWallet mini card -->
     <div class="mono-card" style="margin-bottom:18px">
-      <div style="position:relative">
+      <div>
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div>
             <p style="font-size:11px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.06em;text-transform:uppercase">MonoWallet</p>
@@ -428,7 +430,7 @@ function renderHome(){
         </div>
         <p style="font-size:13px;color:rgba(255,255,255,.5);margin-top:6px;font-family:monospace;letter-spacing:.08em">${S.monoWallet.card.masked}</p>
       </div>
-      <div style="display:flex;gap:8px;position:relative">
+      <div style="display:flex;gap:8px">
         <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border-radius:10px;border:1px solid rgba(255,255,255,.2)" data-action="openModal" data-modal="topup">＋ Top Up</button>
         <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border-radius:10px;border:1px solid rgba(255,255,255,.2)" data-action="openModal" data-modal="virtualCard">Card Details</button>
         <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border-radius:10px;border:1px solid rgba(255,255,255,.2)" data-action="openModal" data-modal="qr">📲 QR</button>
@@ -456,7 +458,7 @@ function renderHome(){
     </div>
 
     <!-- Hero Statement -->
-    ${renderHeroStatement()}
+    ${(()=>{ try{ return renderHeroStatement(); } catch(e){ return ''; } })()}
   `;
 }
 
@@ -573,7 +575,7 @@ function accCardHTML(a){
   const recentTxns = S.transactions.filter(t=>t.accId===a.id).slice(0,3);
   return `
     <div class="acc-card" style="background:linear-gradient(135deg,${a.color}22,${a.color}11);border:1px solid ${a.color}33">
-      <div style="display:flex;align-items:center;justify-content:space-between;position:relative">
+      <div style="display:flex;align-items:center;justify-content:space-between">
         <div style="display:flex;align-items:center;gap:10px">
           <div style="width:40px;height:40px;border-radius:11px;background:${a.color}22;border:1px solid ${a.color}44;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:${a.color}">${a.abbr}</div>
           <div>
