@@ -1060,22 +1060,516 @@ function advanceStep(n){
 function renderModal(){
   const body = document.getElementById('modal-body');
   switch(S.modal.active){
-    case 'linkBank':    body.innerHTML = renderLinkBankStep(); break;
-    case 'topup':       body.innerHTML = renderTopupModal(); break;
-    case 'virtualCard': body.innerHTML = renderVirtualCardModal(); break;
-    case 'qr':          body.innerHTML = renderQRModal(); break;
-    case 'pin':         body.innerHTML = renderPINModal(); break;
-    case 'transfer':    S.transferStep=1; S.transferDraft={fromId:'',toId:'',amount:'',purpose:''}; closeModal(); switchTab('transfer'); break;
+    case 'linkBank':
+      body.innerHTML = renderLinkBankStep();
+      if(S.modal.step===3){ startOTPTimer(); setTimeout(()=>{ const f=document.querySelector('[data-otp-idx="0"]'); if(f) f.focus(); },60); }
+      break;
+    case 'topup':
+      body.innerHTML = renderTopupModal();
+      if(S.modal.step===2) setTimeout(()=>{ const f=document.querySelector('[data-top-idx="0"]'); if(f) f.focus(); },60);
+      break;
+    case 'virtualCard':
+      body.innerHTML = renderVirtualCardModal();
+      if(S.modal.step===2) setTimeout(()=>{ const f=document.querySelector('[data-rev-idx="0"]'); if(f) f.focus(); },60);
+      break;
+    case 'qr':   body.innerHTML = renderQRModal(); break;
+    case 'pin':
+      body.innerHTML = renderPINModal();
+      setTimeout(()=>{ const f=document.querySelector('[data-pin-idx="0"]'); if(f) f.focus(); },60);
+      break;
+    case 'transfer': S.transferStep=1; S.transferDraft={fromId:'',toId:'',amount:'',purpose:''}; closeModal(); switchTab('transfer'); break;
     default: body.innerHTML = '';
   }
 }
 
-// ─── STUBS (replaced in Part 2) ───
-function renderLinkBankStep(){ return `<div style="padding:16px 0 8px;text-align:center"><p style="color:var(--text2);font-size:14px;margin-bottom:16px">Link Bank — coming in Part 2 build</p><button class="btn btn-ghost" onclick="closeModal()">Close</button></div>`; }
-function renderTopupModal(){ return `<div style="padding:16px 0 8px;text-align:center"><p style="color:var(--text2);font-size:14px;margin-bottom:16px">Top-up — coming in Part 2</p><button class="btn btn-ghost" onclick="closeModal()">Close</button></div>`; }
-function renderVirtualCardModal(){ return `<div style="padding:16px 0 8px;text-align:center"><p style="color:var(--text2);font-size:14px;margin-bottom:16px">Virtual Card — coming in Part 2</p><button class="btn btn-ghost" onclick="closeModal()">Close</button></div>`; }
-function renderQRModal(){ return `<div style="padding:16px 0 8px;text-align:center"><p style="color:var(--text2);font-size:14px;margin-bottom:16px">QR Code — coming in Part 2</p><button class="btn btn-ghost" onclick="closeModal()">Close</button></div>`; }
-function renderPINModal(){ return `<div style="padding:16px 0 8px;text-align:center"><p style="color:var(--text2);font-size:14px;margin-bottom:16px">PIN Verify — coming in Part 2</p><button class="btn btn-ghost" onclick="closeModal()">Close</button></div>`; }
+// ═══════════════════════════════════════════════════════
+//  LINK BANK WIZARD — 6 STEPS
+// ═══════════════════════════════════════════════════════
+function renderLinkBankStep(){
+  const s = S.modal.step;
+  const dots = [1,2,3,4,5,6].map(n=>`<div class="sdot${n<s?' done':n===s?' active':''}"></div>`).join('');
+  const hdr = (title,back=true)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:16px 0 12px">
+      ${back&&s>1?`<button class="btn-icon" data-action="lbBack"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>`:'<div style="width:40px"></div>'}
+      <h2 style="font-size:18px;font-weight:800;flex:1">${title}</h2>
+      <button class="btn-icon" data-action="closeModal"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="sdots" style="margin-bottom:16px">${dots}</div>`;
+
+  // ── Step 1: Bank select ──
+  if(s===1){
+    const filter = S.modal.data.bankFilter||'';
+    const list = BANKS.filter(b=>!filter||b.name.toLowerCase().includes(filter.toLowerCase())||b.full.toLowerCase().includes(filter.toLowerCase()));
+    const sel = S.modal.data.selectedBank;
+    return `${hdr('Link a Bank Account',false)}
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Choose your bank or financial institution</p>
+      <input class="field" id="bank-search" type="text" placeholder="🔍  Search banks…" value="${filter}" oninput="onBankSearch(this.value)" style="margin-bottom:11px"/>
+      <div style="display:flex;flex-direction:column;gap:7px;max-height:290px;overflow-y:auto;padding-right:2px">
+        ${list.map(b=>`<div class="bank-opt${sel&&sel.id===b.id?' sel':''}" data-action="selectBank" data-bank-id="${b.id}">
+          <div style="width:38px;height:38px;border-radius:10px;background:${b.bg};border:1px solid ${b.color}44;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:${b.color};flex-shrink:0">${b.abbr}</div>
+          <div style="flex:1"><p style="font-size:14px;font-weight:700">${b.name}</p><p style="font-size:11px;color:var(--text3)">${b.full}</p></div>
+          ${sel&&sel.id===b.id?'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>':''}
+        </div>`).join('')||'<p style="text-align:center;color:var(--text3);padding:16px;font-size:13px">No banks found</p>'}
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:14px;${sel?'':'opacity:.4;cursor:not-allowed'}" ${sel?'':'disabled'} data-action="lbNext">
+        Continue <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>`;
+  }
+
+  // ── Step 2: Credentials ──
+  if(s===2){
+    const b = S.modal.data.selectedBank;
+    return `${hdr(`Sign in to ${b.name}`)}
+      <div style="display:flex;align-items:center;gap:10px;padding:12px;background:${b.bg};border:1px solid ${b.color}33;border-radius:13px;margin-bottom:16px">
+        <div style="width:36px;height:36px;border-radius:9px;background:${b.color}22;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:${b.color}">${b.abbr}</div>
+        <div><p style="font-size:14px;font-weight:700">${b.name}</p><p style="font-size:11px;color:var(--text3)">${b.full}</p></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:14px">
+        <div><label class="lbl">Username / Email</label><input class="field" type="text" id="lb-user" placeholder="Enter your username"/></div>
+        <div><label class="lbl">Password</label>
+          <div style="position:relative">
+            <input class="field" type="password" id="lb-pass" placeholder="Enter your password" style="padding-right:46px"/>
+            <button type="button" onclick="(function(){const f=document.getElementById('lb-pass');f.type=f.type==='password'?'text':'password'})()" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.18);border-radius:12px;padding:11px 14px;margin-bottom:14px;display:flex;gap:9px;align-items:flex-start">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <p style="font-size:11px;color:#86efac;line-height:1.5">Credentials are never stored. Read-only Open Banking API access only.</p>
+      </div>
+      <button class="btn btn-primary" style="width:100%" data-action="lbNext">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Connect Securely
+      </button>`;
+  }
+
+  // ── Step 3: OTP ──
+  if(s===3){
+    return `${hdr('Verify Identity')}
+      <div style="text-align:center;margin-bottom:18px">
+        <div style="width:54px;height:54px;border-radius:50%;background:rgba(99,102,241,.12);border:2px solid rgba(99,102,241,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
+        </div>
+        <p style="font-size:14px;font-weight:700;margin-bottom:3px">OTP Sent</p>
+        <p style="font-size:12px;color:var(--text3)">Sent to <strong style="color:var(--text2)">+92 *** *** 1234</strong></p>
+        <p style="font-size:11px;color:rgba(99,102,241,.65);margin-top:4px">Prototype OTP: <strong>1 2 3 4 5 6</strong></p>
+      </div>
+      <div class="digit-row" style="margin-bottom:12px">
+        ${[0,1,2,3,4,5].map(i=>`<input class="digit-box" type="text" maxlength="1" inputmode="numeric" data-otp-idx="${i}" autocomplete="off"/>`).join('')}
+      </div>
+      <p id="otp-err" style="display:none;text-align:center;color:var(--red);font-size:12px;margin-bottom:8px">Incorrect OTP. Try again.</p>
+      <p id="otp-countdown" style="text-align:center;font-size:12px;color:var(--text3);margin-bottom:14px">Resend in 0:60</p>
+      <button class="btn btn-primary" style="width:100%" data-action="verifyOTP">Verify OTP</button>`;
+  }
+
+  // ── Step 4: Consent ──
+  if(s===4){
+    const c1=S.modal.data.c1||false, c2=S.modal.data.c2||false;
+    return `${hdr('Access Permissions')}
+      <div style="background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.2);border-radius:13px;padding:15px;margin-bottom:16px">
+        <p style="font-size:13px;font-weight:700;margin-bottom:8px">MonoWallet will be able to:</p>
+        ${['✅ View account balances','✅ View transaction history','✅ Read-only access only','❌ Cannot make payments','❌ Cannot transfer your funds'].map(l=>`<p style="font-size:12px;color:var(--text2);padding:3px 0">${l}</p>`).join('')}
+      </div>
+      <label style="display:flex;align-items:flex-start;gap:11px;padding:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;margin-bottom:9px;cursor:pointer">
+        <input type="checkbox" id="c1" ${c1?'checked':''} onchange="S.modal.data.c1=this.checked;updateConsentBtn()" style="width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:var(--accent)"/>
+        <span style="font-size:13px;line-height:1.5">I understand MonoWallet has <strong>read-only</strong> access and cannot make payments</span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:11px;padding:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;cursor:pointer">
+        <input type="checkbox" id="c2" ${c2?'checked':''} onchange="S.modal.data.c2=this.checked;updateConsentBtn()" style="width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:var(--accent)"/>
+        <span style="font-size:13px;line-height:1.5">I agree to MonoWallet's <u style="color:var(--accent)">Terms</u> and <u style="color:var(--accent)">Privacy Policy</u></span>
+      </label>
+      <button id="consent-btn" class="btn btn-primary" style="width:100%;${c1&&c2?'':'opacity:.4;cursor:not-allowed'}" ${c1&&c2?'':'disabled'} data-action="lbNext">Continue</button>`;
+  }
+
+  // ── Step 5: Account picker ──
+  if(s===5){
+    const b = S.modal.data.selectedBank;
+    if(!S.modal.data.foundAccounts){ S.modal.data.foundAccounts = genMockAccounts(b); S.modal.data.selectedAccounts = new Set(S.modal.data.foundAccounts.map(a=>a.id)); }
+    const accs = S.modal.data.foundAccounts;
+    return `${hdr('Select Accounts')}
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <div style="width:36px;height:36px;border-radius:9px;background:${b.bg};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:${b.color}">${b.abbr}</div>
+        <div><p style="font-size:14px;font-weight:700">${b.name}</p><p style="font-size:12px;color:var(--text3)">${accs.length} account${accs.length!==1?'s':''} found</p></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+        ${accs.map(a=>{ const sel=S.modal.data.selectedAccounts.has(a.id);
+          return `<div class="bank-opt${sel?' sel':''}" data-action="toggleFoundAcc" data-acc-id="${a.id}">
+            <div style="display:flex;align-items:center;gap:10px;flex:1">
+              <div style="width:34px;height:34px;border-radius:9px;background:${b.bg};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:${b.color}">${b.abbr}</div>
+              <div><p style="font-size:13px;font-weight:700">${a.type}</p><p style="font-size:11px;color:var(--text3)">${a.no} · ${fmtPKR(a.balance)}</p></div>
+            </div>
+            <div style="width:22px;height:22px;border-radius:50%;${sel?'background:var(--accent)':'background:var(--border2)'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              ${sel?'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>':''}
+            </div>
+          </div>`;}).join('')}
+      </div>
+      <button class="btn btn-primary" style="width:100%" data-action="completeLinkBank">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Link ${S.modal.data.selectedAccounts.size} Account${S.modal.data.selectedAccounts.size!==1?'s':''}
+      </button>`;
+  }
+
+  // ── Step 6: Success ──
+  if(s===6){
+    const b = S.modal.data.selectedBank;
+    const names = S.modal.data.linkedNames||[];
+    return `<div style="text-align:center;padding:22px 0 6px">
+      <div style="width:64px;height:64px;border-radius:50%;background:rgba(34,197,94,.12);border:2px solid rgba(34,197,94,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">Accounts Linked! 🎉</h2>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:18px">${b.name} connected successfully</p>
+      <div style="text-align:left;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.14);border-radius:13px;padding:12px 16px;margin-bottom:20px">
+        ${names.map(n=>`<p style="font-size:13px;color:#86efac;padding:3px 0">✓ ${n}</p>`).join('')}
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-bottom:10px" onclick="closeModal();switchTab('accounts')">View My Accounts</button>
+      <button class="btn btn-ghost" style="width:100%" data-action="closeModal">Done</button>
+    </div>`;
+  }
+  return '';
+}
+
+function genMockAccounts(b){
+  const types=['Current Account','Savings Account','Mobile Wallet','Digital Account'];
+  const n=1+Math.floor(Math.random()*2);
+  return Array.from({length:n},(_,i)=>({
+    id:`${b.id}_lnk_${i}_${Date.now()}`, type:types[i%types.length],
+    no:`****${Math.floor(1000+Math.random()*9000)}`,
+    balance:Math.floor(15000+Math.random()*480000),
+    bankId:b.id, bankName:b.name, color:b.color, abbr:b.abbr,
+    linked:new Date().toISOString().slice(0,10),
+  }));
+}
+
+function onBankSearch(v){
+  S.modal.data.bankFilter=v; renderModal();
+  const inp=document.getElementById('bank-search');
+  if(inp){ inp.focus(); inp.setSelectionRange(v.length,v.length); }
+}
+
+function updateConsentBtn(){
+  const btn=document.getElementById('consent-btn');
+  if(!btn) return;
+  const ok=S.modal.data.c1&&S.modal.data.c2;
+  btn.disabled=!ok; btn.style.opacity=ok?'1':'.4'; btn.style.cursor=ok?'pointer':'not-allowed';
+}
+
+function startOTPTimer(){
+  if(S.modal.data.otpTimer) clearInterval(S.modal.data.otpTimer);
+  S.modal.data.otpCount=60;
+  S.modal.data.otpTimer=setInterval(()=>{
+    S.modal.data.otpCount=(S.modal.data.otpCount||1)-1;
+    const el=document.getElementById('otp-countdown');
+    if(!el){ clearInterval(S.modal.data.otpTimer); return; }
+    if(S.modal.data.otpCount>0){
+      el.textContent=`Resend in 0:${String(S.modal.data.otpCount).padStart(2,'0')}`;
+    } else {
+      clearInterval(S.modal.data.otpTimer);
+      el.innerHTML='<button class="btn-ghost btn-xs" style="color:var(--accent)" data-action="resendOTP">Resend OTP</button>';
+    }
+  },1000);
+}
+
+function handleLBNext(){
+  const s=S.modal.step;
+  if(s===1){ if(!S.modal.data.selectedBank){ toast('Select a bank','error'); return; } advanceStep(2); }
+  else if(s===2){
+    const u=document.getElementById('lb-user')?.value.trim();
+    const p=document.getElementById('lb-pass')?.value;
+    if(!u||!p){ toast('Enter username and password','error'); return; }
+    S.modal.data.username=u; S.modal.data.password=p; advanceStep(3);
+  }
+  else if(s===3){ verifyOTP(); }
+  else if(s===4){
+    const c1=document.getElementById('c1')?.checked;
+    const c2=document.getElementById('c2')?.checked;
+    if(!c1||!c2){ toast('Accept all terms to continue','error'); return; }
+    S.modal.data.c1=true; S.modal.data.c2=true; advanceStep(5);
+  }
+  else if(s===5){ completeLinkBank(); }
+}
+
+function verifyOTP(){
+  const code=[0,1,2,3,4,5].map(i=>{ const e=document.querySelector(`[data-otp-idx="${i}"]`); return e?e.value:''; }).join('');
+  if(code==='123456'){
+    advanceStep(4);
+  } else {
+    document.querySelectorAll('[data-otp-idx]').forEach(b=>{ b.classList.add('err'); b.value=''; });
+    const err=document.getElementById('otp-err'); if(err) err.style.display='block';
+    setTimeout(()=>{ document.querySelectorAll('[data-otp-idx]').forEach(b=>b.classList.remove('err')); const f=document.querySelector('[data-otp-idx="0"]'); if(f) f.focus(); },500);
+  }
+}
+
+function completeLinkBank(){
+  const b=S.modal.data.selectedBank;
+  const accs=S.modal.data.foundAccounts||[];
+  const sel=S.modal.data.selectedAccounts||new Set();
+  const names=[];
+  accs.filter(a=>sel.has(a.id)).forEach(a=>{
+    if(S.accounts.find(x=>x.id===a.id)) return;
+    S.accounts.push({...a});
+    names.push(`${b.name} ${a.type} ${a.no}`);
+  });
+  S.modal.data.linkedNames=names;
+  advanceStep(6);
+  launchConfetti();
+  toast(`${names.length} account${names.length!==1?'s':''} linked!`,'success');
+}
+
+function handleOTPInput(el,idx){
+  el.value=el.value.replace(/\D/g,'').slice(-1);
+  el.classList.toggle('filled',!!el.value);
+  if(el.value&&idx<5){ const n=document.querySelector(`[data-otp-idx="${idx+1}"]`); if(n) n.focus(); }
+  if(idx===5&&el.value){ const all=[0,1,2,3,4,5].every(i=>{ const e=document.querySelector(`[data-otp-idx="${i}"]`); return e&&e.value; }); if(all) setTimeout(verifyOTP,120); }
+}
+
+function handleDigitInput(el,attr,idx,total,onComplete){
+  el.value=el.value.replace(/\D/g,'').slice(-1);
+  if(el.value&&idx<total-1){ const n=document.querySelector(`[data-${attr}-idx="${idx+1}"]`); if(n) n.focus(); }
+  if(idx===total-1&&el.value){ const all=Array.from({length:total},(_,i)=>{ const e=document.querySelector(`[data-${attr}-idx="${i}"]`); return e&&e.value; }).every(Boolean); if(all) setTimeout(onComplete,120); }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PIN MODAL (Transfer)
+// ═══════════════════════════════════════════════════════
+function renderPINModal(){
+  return `<div style="padding-top:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <h2 style="font-size:18px;font-weight:800">Enter PIN</h2>
+      <button class="btn-icon" data-action="closeModal"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:4px">Authorise your transfer with your 4-digit PIN</p>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:18px">Prototype hint — PIN is <strong style="color:var(--accent)">1234</strong></p>
+    <div class="digit-row" style="margin-bottom:12px">
+      ${[0,1,2,3].map(i=>`<input class="digit-box" type="password" maxlength="1" inputmode="numeric" data-pin-idx="${i}" autocomplete="off"/>`).join('')}
+    </div>
+    <p id="pin-err" style="display:none;text-align:center;color:var(--red);font-size:12px;margin-bottom:10px">Incorrect PIN. Try again.</p>
+    <button class="btn btn-primary" style="width:100%;margin-bottom:9px" data-action="verifyPIN">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      Confirm Transfer
+    </button>
+    <button class="btn btn-ghost" style="width:100%" data-action="closeModal">Cancel</button>
+  </div>`;
+}
+
+function verifyPIN(){
+  const pin=[0,1,2,3].map(i=>{ const e=document.querySelector(`[data-pin-idx="${i}"]`); return e?e.value:''; }).join('');
+  if(pin==='1234'){
+    executeTransfer(); closeModal(); S.transferStep=3; renderTransfer();
+    toast('Transfer successful! 🎉','success');
+  } else {
+    document.querySelectorAll('[data-pin-idx]').forEach(b=>{ b.classList.add('err'); b.value=''; });
+    const err=document.getElementById('pin-err'); if(err) err.style.display='block';
+    setTimeout(()=>{ document.querySelectorAll('[data-pin-idx]').forEach(b=>b.classList.remove('err')); const f=document.querySelector('[data-pin-idx="0"]'); if(f) f.focus(); },500);
+  }
+}
+
+function executeTransfer(){
+  const d=S.transferDraft, amt=parseFloat(d.amount);
+  if(isNaN(amt)||amt<=0) return;
+  if(d.fromId==='monoWallet') S.monoWallet.balance-=amt; else { const a=getAcc(d.fromId); if(a) a.balance-=amt; }
+  if(d.toId==='monoWallet') S.monoWallet.balance+=amt; else { const a=getAcc(d.toId); if(a) a.balance+=amt; }
+  const now=new Date().toISOString().slice(0,10);
+  S.transactions.unshift({id:S.uid(),date:now,desc:`Transfer → ${getAccName(d.toId)}`,amount:-amt,type:'transfer',category:'Transfer',accId:d.fromId,emoji:'↗️'});
+  S.transactions.unshift({id:S.uid(),date:now,desc:`Transfer from ${getAccName(d.fromId)}`,amount:amt,type:'transfer',category:'Transfer',accId:d.toId,emoji:'↙️'});
+}
+
+// ═══════════════════════════════════════════════════════
+//  TOP-UP MODAL
+// ═══════════════════════════════════════════════════════
+function renderTopupModal(){
+  if(S.modal.step===1){
+    return `<div style="padding-top:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <h2 style="font-size:18px;font-weight:800">Top Up MonoWallet</h2>
+        <button class="btn-icon" data-action="closeModal"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:13px;padding:14px;margin-bottom:16px">
+        <p style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;font-weight:700">Current Balance</p>
+        <p style="font-size:26px;font-weight:800;color:#fff;margin-top:4px">${fmtPKR(S.monoWallet.balance)}</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:16px">
+        <div><label class="lbl">From Account</label>
+          <select class="field" id="topup-from">
+            <option value="">— Select source —</option>
+            ${S.accounts.map(a=>`<option value="${a.id}">${a.bankName} ${a.type} · ${fmtPKR(a.balance)}</option>`).join('')}
+          </select>
+        </div>
+        <div><label class="lbl">Amount (PKR)</label><input class="field" type="number" id="topup-amt" placeholder="Enter amount" min="1" step="0.01"/></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" data-action="topupReview">Continue →</button>
+    </div>`;
+  }
+  const d=S.modal.data;
+  return `<div style="padding-top:18px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <button class="btn-icon" onclick="S.modal.step=1;renderModal()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <h2 style="font-size:18px;font-weight:800">Confirm Top Up</h2>
+    </div>
+    <div class="glass" style="padding:15px;margin-bottom:14px">
+      ${reviewRow('From',getAccName(d.fromId))}${reviewRow('Amount',fmtPKR(d.topupAmt))}${reviewRow('To','MonoWallet')}${reviewRow('Fee','Free')}
+    </div>
+    <p style="font-size:12px;color:var(--text2);text-align:center;margin-bottom:3px">Enter PIN to confirm</p>
+    <p style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:16px">Hint: <strong style="color:var(--accent)">1234</strong></p>
+    <div class="digit-row" style="margin-bottom:11px">
+      ${[0,1,2,3].map(i=>`<input class="digit-box" type="password" maxlength="1" inputmode="numeric" data-top-idx="${i}" autocomplete="off"/>`).join('')}
+    </div>
+    <p id="top-err" style="display:none;text-align:center;color:var(--red);font-size:12px;margin-bottom:10px">Incorrect PIN</p>
+    <button class="btn btn-primary" style="width:100%" data-action="doTopup">Confirm Top Up</button>
+  </div>`;
+}
+
+function doTopupPIN(){
+  const pin=[0,1,2,3].map(i=>{ const e=document.querySelector(`[data-top-idx="${i}"]`); return e?e.value:''; }).join('');
+  if(pin==='1234'){
+    const {fromId,topupAmt}=S.modal.data, amt=parseFloat(topupAmt);
+    const acc=getAcc(fromId); if(acc) acc.balance-=amt;
+    S.monoWallet.balance+=amt;
+    const now=new Date().toISOString().slice(0,10);
+    S.transactions.unshift({id:S.uid(),date:now,desc:`Top-up from ${getAccName(fromId)}`,amount:-amt,type:'transfer',category:'Transfer',accId:fromId,emoji:'💳'});
+    S.transactions.unshift({id:S.uid(),date:now,desc:`Top-up received`,amount:amt,type:'topup',category:'Transfer',accId:'monoWallet',emoji:'💳'});
+    closeModal(); toast(`${fmtPKR(amt)} added to MonoWallet!`,'success');
+    if(S.activeTab==='home') renderHome(); else if(S.activeTab==='accounts') renderAccounts();
+  } else {
+    document.querySelectorAll('[data-top-idx]').forEach(b=>{ b.classList.add('err'); b.value=''; });
+    const err=document.getElementById('top-err'); if(err) err.style.display='block';
+    setTimeout(()=>{ document.querySelectorAll('[data-top-idx]').forEach(b=>b.classList.remove('err')); const f=document.querySelector('[data-top-idx="0"]'); if(f) f.focus(); },500);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  VIRTUAL CARD MODAL
+// ═══════════════════════════════════════════════════════
+function renderVirtualCardModal(){
+  const card=S.monoWallet.card, s=S.modal.step;
+  const numDisplay = s===3 ? card.full.replace(/(\d{4})(?=\d)/g,'$1 ') : card.masked;
+  const cvvDisplay = s===3 ? card.cvv : '•••';
+  return `<div style="padding-top:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 style="font-size:18px;font-weight:800">Virtual Card</h2>
+      <button class="btn-icon" data-action="closeModal"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div style="background:linear-gradient(135deg,#312e81,#4f46e5 50%,#7c3aed);border-radius:18px;padding:22px;margin-bottom:18px;position:relative;overflow:hidden">
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 75% 15%,rgba(255,255,255,.1),transparent 55%)"></div>
+      <div style="position:relative">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px">
+          <div><p style="font-size:11px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.06em;text-transform:uppercase">MonoWallet</p>
+            <p style="font-size:12px;color:${card.frozen?'#fca5a5':'rgba(255,255,255,.7)'};margin-top:2px">${card.frozen?'🔴 FROZEN':'🟢 Active'}</p></div>
+          <svg width="40" height="26" viewBox="0 0 40 26"><rect width="40" height="26" rx="4" fill="rgba(255,255,255,.12)"/><circle cx="15" cy="13" r="9" fill="#eb001b" fill-opacity=".8"/><circle cx="25" cy="13" r="9" fill="#f79e1b" fill-opacity=".8"/></svg>
+        </div>
+        <p style="font-size:17px;font-weight:700;color:#fff;letter-spacing:.1em;font-family:monospace;margin-bottom:14px">${numDisplay}</p>
+        <div style="display:flex;justify-content:space-between;align-items:flex-end">
+          <div><p style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.05em">Holder</p><p style="font-size:12px;font-weight:600;color:#fff">${card.holder}</p></div>
+          <div style="text-align:center"><p style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.05em">Expires</p><p style="font-size:12px;font-weight:600;color:#fff">${card.expiry}</p></div>
+          <div style="text-align:right"><p style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.05em">CVV</p><p style="font-size:15px;font-weight:800;color:#fff">${cvvDisplay}</p></div>
+        </div>
+      </div>
+    </div>
+    ${s===1?`
+      <button class="btn btn-primary" style="width:100%;margin-bottom:9px" data-action="startReveal">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        Reveal Full Details
+      </button>
+      <button class="btn btn-secondary" style="width:100%" data-action="freezeCard">${card.frozen?'🟢 Unfreeze Card':'🔴 Freeze Card'}</button>`
+    :s===2?`
+      <p style="font-size:12px;color:var(--text2);text-align:center;margin-bottom:3px">Enter PIN to reveal</p>
+      <p style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:15px">Hint: <strong style="color:var(--accent)">1234</strong></p>
+      <div class="digit-row" style="margin-bottom:11px">
+        ${[0,1,2,3].map(i=>`<input class="digit-box" type="password" maxlength="1" inputmode="numeric" data-rev-idx="${i}" autocomplete="off"/>`).join('')}
+      </div>
+      <p id="rev-err" style="display:none;text-align:center;color:var(--red);font-size:12px;margin-bottom:10px">Incorrect PIN</p>
+      <button class="btn btn-primary" style="width:100%;margin-bottom:9px" data-action="revealCard">Reveal Details</button>
+      <button class="btn btn-ghost" style="width:100%" onclick="S.modal.step=1;renderModal()">Cancel</button>`
+    :`
+      <button class="btn btn-secondary" style="width:100%;margin-bottom:9px" data-action="copyCard">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copy Card Number
+      </button>
+      <button class="btn btn-secondary" style="width:100%" data-action="freezeCard">${card.frozen?'🟢 Unfreeze Card':'🔴 Freeze Card'}</button>`}
+  </div>`;
+}
+
+function doRevealCard(){
+  const pin=[0,1,2,3].map(i=>{ const e=document.querySelector(`[data-rev-idx="${i}"]`); return e?e.value:''; }).join('');
+  if(pin==='1234'){ S.modal.step=3; renderModal(); }
+  else {
+    document.querySelectorAll('[data-rev-idx]').forEach(b=>{ b.classList.add('err'); b.value=''; });
+    const err=document.getElementById('rev-err'); if(err) err.style.display='block';
+    setTimeout(()=>{ document.querySelectorAll('[data-rev-idx]').forEach(b=>b.classList.remove('err')); const f=document.querySelector('[data-rev-idx="0"]'); if(f) f.focus(); },500);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  QR MODAL
+// ═══════════════════════════════════════════════════════
+function renderQRModal(){
+  return `<div style="padding-top:18px;text-align:center">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 style="font-size:18px;font-weight:800">Receive Funds</h2>
+      <button class="btn-icon" data-action="closeModal"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div style="display:flex;justify-content:center;margin-bottom:14px">
+      <div style="background:#fff;padding:14px;border-radius:16px;display:inline-block">
+        ${generateQRSVG('monowallet://pay/FARHAN_NAZ_8847',180)}
+      </div>
+    </div>
+    <p style="font-size:14px;font-weight:700;margin-bottom:3px">Farhan Naz</p>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:4px">MonoWallet ID: FARHAN_NAZ_8847</p>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:18px">Share this QR to receive payments to your MonoWallet</p>
+    <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:12px;padding:12px;margin-bottom:18px">
+      <p style="font-size:12px;color:var(--text3);margin-bottom:3px">Current Balance</p>
+      <p style="font-size:22px;font-weight:800;color:#818cf8">${fmtPKR(S.monoWallet.balance)}</p>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-bottom:9px" data-action="shareQR">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      Share QR Code
+    </button>
+    <button class="btn btn-ghost" style="width:100%" data-action="closeModal">Done</button>
+  </div>`;
+}
+
+function generateQRSVG(data,size){
+  const N=21, mat=Array.from({length:N},()=>new Uint8Array(N));
+  const finder=(r0,c0)=>{ for(let r=r0;r<r0+7;r++) for(let c=c0;c<c0+7;c++){ if(r>=0&&r<N&&c>=0&&c<N) mat[r][c]=(r===r0||r===r0+6||c===c0||c===c0+6||(r>=r0+2&&r<=r0+4&&c>=c0+2&&c<=c0+4))?1:0; } };
+  finder(0,0); finder(0,14); finder(14,0);
+  let h=0; for(let i=0;i<data.length;i++) h=((h*31+data.charCodeAt(i))>>>0);
+  for(let r=0;r<N;r++) for(let c=0;c<N;c++){
+    if((r<9&&c<9)||(r<9&&c>12)||(r>12&&c<9)) continue;
+    mat[r][c]=(((h^(r*N+c)*2654435761)>>>0)&0xFF)>127?1:0;
+  }
+  const mod=Math.floor(size/N), pad=Math.floor((size-mod*N)/2);
+  let rects='';
+  for(let r=0;r<N;r++) for(let c=0;c<N;c++) if(mat[r][c]) rects+=`<rect x="${pad+c*mod}" y="${pad+r*mod}" width="${mod}" height="${mod}" fill="#111"/>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><rect width="${size}" height="${size}" fill="white"/>${rects}</svg>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  CONFETTI
+// ═══════════════════════════════════════════════════════
+function launchConfetti(){
+  const canvas=document.getElementById('confetti-canvas');
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  canvas.style.display='block';
+  const ctx=canvas.getContext('2d');
+  const COLS=['#6366f1','#22c55e','#f59e0b','#ec4899','#14b8a6','#f97316','#a78bfa'];
+  const pts=Array.from({length:110},()=>({
+    x:Math.random()*canvas.width, y:-10,
+    vx:(Math.random()-.5)*4, vy:Math.random()*2.5+1.5,
+    col:COLS[Math.floor(Math.random()*COLS.length)],
+    w:Math.random()*9+4, h:Math.random()*5+3,
+    rot:Math.random()*360, rs:(Math.random()-.5)*6, alpha:1
+  }));
+  let frame=0;
+  const tick=()=>{
+    if(frame>150){ canvas.style.display='none'; ctx.clearRect(0,0,canvas.width,canvas.height); return; }
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pts.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.07; p.rot+=p.rs; if(frame>100) p.alpha=Math.max(0,p.alpha-.035);
+      ctx.save(); ctx.globalAlpha=p.alpha; ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180); ctx.fillStyle=p.col; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore(); });
+    frame++; requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
 
 // ═══════════════════════════════════════════════════════
 //  TOAST
@@ -1128,6 +1622,71 @@ document.addEventListener('click', e=>{
   const {action, tab, cur, period, modal} = el.dataset;
 
   switch(action){
+    // ── Link Bank modal actions ──
+    case 'lbNext': handleLBNext(); break;
+    case 'lbBack': S.modal.step=Math.max(1,S.modal.step-1); renderModal(); break;
+    case 'selectBank': {
+      const bank=BANKS.find(b=>b.id===el.dataset.bankId);
+      if(bank){ S.modal.data.selectedBank=bank; renderModal(); }
+      break;
+    }
+    case 'verifyOTP': verifyOTP(); break;
+    case 'resendOTP': {
+      S.modal.data.otpCount=60;
+      startOTPTimer();
+      document.querySelectorAll('[data-otp-idx]').forEach(b=>{b.value='';b.classList.remove('filled');});
+      const errEl=document.getElementById('otp-err'); if(errEl) errEl.style.display='none';
+      setTimeout(()=>{ const f=document.querySelector('[data-otp-idx="0"]'); if(f) f.focus(); },60);
+      break;
+    }
+    case 'completeLinkBank': completeLinkBank(); break;
+
+    // ── Transfer PIN modal ──
+    case 'verifyPIN': verifyPIN(); break;
+
+    // ── Top-up modal ──
+    case 'topupReview': {
+      const fromId=document.getElementById('topup-from')?.value;
+      const amt=parseFloat(document.getElementById('topup-amt')?.value);
+      if(!fromId){ toast('Select a source account','error'); break; }
+      if(isNaN(amt)||amt<=0){ toast('Enter a valid amount','error'); break; }
+      const srcAcc=getAcc(fromId);
+      if(srcAcc&&amt>srcAcc.balance){ toast('Insufficient balance','error'); break; }
+      S.modal.data.fromId=fromId; S.modal.data.topupAmt=amt; S.modal.step=2; renderModal();
+      break;
+    }
+    case 'doTopup': doTopupPIN(); break;
+
+    // ── Virtual card modal ──
+    case 'startReveal': S.modal.step=2; renderModal(); break;
+    case 'revealCard': doRevealCard(); break;
+    case 'copyCard': {
+      const num=S.monoWallet.card.full.replace(/(\d{4})(?=\d)/g,'$1 ');
+      if(navigator.clipboard){ navigator.clipboard.writeText(num).then(()=>toast('Card number copied','success')).catch(()=>toast('Copy failed','error')); }
+      else toast('Clipboard not available','error');
+      break;
+    }
+    case 'freezeCard':
+      S.monoWallet.card.frozen=!S.monoWallet.card.frozen;
+      toast(S.monoWallet.card.frozen?'Card frozen 🔴':'Card unfrozen 🟢','info');
+      renderModal(); break;
+
+    // ── Linked accounts selection ──
+    case 'toggleFoundAcc': {
+      if(!S.modal.data.selectedAccounts) S.modal.data.selectedAccounts=new Set();
+      const aid=el.dataset.accId;
+      if(S.modal.data.selectedAccounts.has(aid)) S.modal.data.selectedAccounts.delete(aid);
+      else S.modal.data.selectedAccounts.add(aid);
+      renderModal(); break;
+    }
+
+    // ── QR share ──
+    case 'shareQR':
+      if(navigator.share){ navigator.share({title:'Pay me via MonoWallet',text:'monowallet://pay/FARHAN_NAZ_8847'}).catch(()=>{}); }
+      else if(navigator.clipboard){ navigator.clipboard.writeText('monowallet://pay/FARHAN_NAZ_8847').then(()=>toast('Payment link copied!','success')).catch(()=>toast('Copy failed','error')); }
+      else toast('Share not supported','error');
+      break;
+
     case 'switchTab':
       switchTab(tab); break;
 
@@ -1240,6 +1799,35 @@ document.addEventListener('click', e=>{
 // Close modal on overlay click
 document.getElementById('modal-overlay').addEventListener('click', e=>{
   if(e.target===document.getElementById('modal-overlay')) closeModal();
+});
+
+// ── All input delegation: digit boxes + bank search ──
+// handleDigitInput expects the attribute PREFIX (e.g. 'pin'), builds [data-pin-idx="N"]
+document.addEventListener('input', e=>{
+  const t=e.target;
+  if(t.id==='bank-search'){ onBankSearch(t.value); return; }
+  if(t.dataset.otpIdx!==undefined){ handleOTPInput(t,parseInt(t.dataset.otpIdx)); return; }
+  if(t.dataset.pinIdx!==undefined){ handleDigitInput(t,'pin',parseInt(t.dataset.pinIdx),4,verifyPIN); return; }
+  if(t.dataset.topIdx!==undefined){ handleDigitInput(t,'top',parseInt(t.dataset.topIdx),4,doTopupPIN); return; }
+  if(t.dataset.revIdx!==undefined){ handleDigitInput(t,'rev',parseInt(t.dataset.revIdx),4,doRevealCard); return; }
+});
+
+// ── Backspace: jump to previous digit box ──
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Backspace') return;
+  const t=e.target;
+  let prefix=null, idx=-1;
+  if(t.dataset.otpIdx!==undefined){ prefix='otp'; idx=parseInt(t.dataset.otpIdx); }
+  else if(t.dataset.pinIdx!==undefined){ prefix='pin'; idx=parseInt(t.dataset.pinIdx); }
+  else if(t.dataset.topIdx!==undefined){ prefix='top'; idx=parseInt(t.dataset.topIdx); }
+  else if(t.dataset.revIdx!==undefined){ prefix='rev'; idx=parseInt(t.dataset.revIdx); }
+  if(prefix&&!t.value&&idx>0){ const prev=document.querySelector(`[data-${prefix}-idx="${idx-1}"]`); if(prev){ prev.focus(); prev.value=''; prev.classList.remove('filled'); } }
+});
+
+// ── Consent checkboxes ──
+document.addEventListener('change', e=>{
+  const t=e.target;
+  if(t.id==='c1'||t.id==='c2'){ S.modal.data[t.id]=t.checked; updateConsentBtn(); }
 });
 
 // ═══════════════════════════════════════════════════════
