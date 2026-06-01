@@ -22,7 +22,7 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text1);dis
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 
-#app{width:100%;max-width:430px;height:100dvh;display:flex;flex-direction:column;background:var(--bg);position:relative}
+#app{width:100%;max-width:430px;height:100vh;height:100dvh;display:flex;flex-direction:column;background:var(--bg);position:relative}
 
 /* header */
 #app-header{flex-shrink:0;background:rgba(8,12,24,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;z-index:50}
@@ -45,15 +45,11 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text1);dis
 .glass{background:var(--card);border:1px solid var(--border);border-radius:18px}
 .glass-hover:hover{border-color:var(--border2);transition:border-color .2s}
 
-/* wealth card */
-.wealth-card{border-radius:22px;padding:22px 22px 18px;background:linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#3730a3 100%);position:relative;overflow:hidden}
-.wealth-card::before{content:'';position:absolute;inset:0;z-index:0;background:radial-gradient(ellipse at 80% 10%,rgba(255,255,255,.07),transparent 60%),radial-gradient(ellipse at 10% 90%,rgba(255,255,255,.04),transparent 55%);pointer-events:none}
-.wealth-card>*{position:relative;z-index:1}
+/* wealth card — no ::before overlay (eliminates stacking context conflicts) */
+.wealth-card{border-radius:22px;padding:22px 22px 18px;background:linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#3730a3 100%),radial-gradient(ellipse at 80% 10%,rgba(255,255,255,.07),transparent 60%);position:relative}
 
 /* mono card */
-.mono-card{border-radius:20px;padding:22px;background:linear-gradient(135deg,#312e81,#4f46e5 50%,#7c3aed);position:relative;overflow:hidden;min-height:150px;display:flex;flex-direction:column;justify-content:space-between}
-.mono-card::before{content:'';position:absolute;inset:0;z-index:0;background:radial-gradient(ellipse at 75% 15%,rgba(255,255,255,.1),transparent 55%);pointer-events:none}
-.mono-card>*{position:relative;z-index:1}
+.mono-card{border-radius:20px;padding:22px;background:linear-gradient(135deg,#312e81,#4f46e5 50%,#7c3aed);position:relative;min-height:150px;display:flex;flex-direction:column;justify-content:space-between}
 
 /* account card */
 .acc-card{border-radius:18px;padding:20px;position:relative;overflow:hidden;cursor:pointer;transition:transform .18s,box-shadow .18s;display:flex;flex-direction:column;gap:12px}
@@ -2043,6 +2039,11 @@ function init(){
   renderBottomNav();
   renderHome();
   startRates();
+  // Guarantee the wealth number is always written, regardless of CSS rendering issues
+  const nwEl = document.getElementById('nw-display');
+  if(nwEl && !nwEl.textContent.trim()){
+    nwEl.textContent = fmtAmt(netWealth());
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
