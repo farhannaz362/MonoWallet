@@ -93,8 +93,9 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text1);dis
 .qa span{font-size:11px;font-weight:600;color:var(--text2)}
 
 /* tx rows */
-.tx-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.tx-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .14s}
 .tx-row:last-child{border-bottom:none}
+.tx-row:hover{background:rgba(255,255,255,.03);border-radius:10px}
 .tx-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
 
 /* modal */
@@ -164,7 +165,7 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text1);dis
       <button class="btn-icon" data-action="showNotif">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
       </button>
-      <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;cursor:pointer">F</div>
+      <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;cursor:pointer" data-action="openModal" data-modal="profile">F</div>
     </div>
   </header>
 
@@ -296,14 +297,16 @@ function getAccBal(id){
   const a = getAcc(id); return a ? a.balance : 0;
 }
 
+function fmtNum(n){ return Math.round(Math.abs(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g,','); }
 function fmtAmt(pkr, currency){
   currency = currency || S.displayCurrency;
-  const val = pkr * S.rates[currency];
-  const sym = CUR_SYM[currency];
-  if(currency==='PKR') return sym + Math.round(val).toLocaleString('en-PK');
-  return sym + val.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const val = pkr * (S.rates[currency] || BASE_RATES[currency] || 1);
+  const sym = CUR_SYM[currency] || 'PKR ';
+  if(currency==='PKR') return sym + fmtNum(val);
+  const abs = Math.abs(val).toFixed(2);
+  return sym + abs.replace(/\B(?=(\d{3})+(?!\d))/g,',');
 }
-function fmtPKR(n){ return 'PKR '+Math.abs(Math.round(n)).toLocaleString('en-PK'); }
+function fmtPKR(n){ return 'Rs '+fmtNum(n); }
 function fmtDate(ds){
   const d = new Date(ds);
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
@@ -343,7 +346,7 @@ function stmtTxns(){
   let cutoff;
   if(S.statementPeriod==='week') cutoff = new Date(Date.now()-7*864e5);
   else if(S.statementPeriod==='3month') cutoff = new Date(Date.now()-90*864e5);
-  else cutoff = new Date(now.getFullYear(), now.getMonth(), 1);
+  else cutoff = new Date(Date.now() - 30*864e5);
   return S.transactions.filter(t=>new Date(t.date)>=cutoff).sort((a,b)=>b.date.localeCompare(a.date));
 }
 
@@ -365,7 +368,7 @@ function renderBottomNav(){
   document.getElementById('bottom-nav').innerHTML = `
     ${navBtn('home','Home','<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>')}
     ${navBtn('accounts','Accounts','<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>')}
-    <button class="nav-fab" data-action="openModal" data-modal="transfer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></button>
+    <button class="nav-fab" data-action="openModal" data-modal="transfer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg></button>
     ${navBtn('spending','Spending','<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>')}
     ${navBtn('more','More','<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>')}
   `;
@@ -468,14 +471,14 @@ function renderHeroStatement(){
   const totalOut = txns.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0);
   const net      = totalIn - totalOut;
 
-  const periods = [{k:'week',l:'This Week'},{k:'month',l:'This Month'},{k:'3month',l:'3 Months'}];
+  const periods = [{k:'week',l:'7 Days'},{k:'month',l:'30 Days'},{k:'3month',l:'90 Days'}];
 
   const rows = txns.slice(0,20).map(tx=>{
     const acc = tx.accId==='monoWallet' ? {abbr:'MW',color:'#6366f1',bankName:'MonoWallet'} : (getAcc(tx.accId)||{abbr:'?',color:'#64748b',bankName:'?'});
     const amt = tx.amount;
     const col = amt>=0 ? '#4ade80' : '#f87171';
     const sign= amt>=0 ? '+' : '-';
-    return `<div class="tx-row">
+    return `<div class="tx-row" data-action="txDetail" data-tx-id="${tx.id}">
       <div class="tx-icon" style="background:rgba(255,255,255,.05)">${tx.emoji}</div>
       <div style="flex:1;min-width:0">
         <p style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.desc}</p>
@@ -513,7 +516,7 @@ function renderHeroStatement(){
             <p style="font-size:14px;font-weight:800;color:${net>=0?'#4ade80':'#f87171'}">${net>=0?'+':''}${fmtPKR(net)}</p>
           </div>
         </div>
-        <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:10px;border-top:1px solid var(--border);padding-top:8px">Net wealth changed by <strong style="color:${net>=0?'#4ade80':'#f87171'}">${net>=0?'+':''}${fmtPKR(net)}</strong> ${S.statementPeriod==='week'?'this week':S.statementPeriod==='month'?'this month':'in 3 months'}</p>
+        <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:10px;border-top:1px solid var(--border);padding-top:8px">Net wealth changed by <strong style="color:${net>=0?'#4ade80':'#f87171'}">${net>=0?'+':''}${fmtPKR(net)}</strong> ${S.statementPeriod==='week'?'in the last 7 days':S.statementPeriod==='month'?'in the last 30 days':'in the last 90 days'}</p>
       </div>
 
       <div class="glass" style="padding:4px 14px">
@@ -845,7 +848,7 @@ function txRowHTML(tx, flags){
   const col = tx.amount>=0?'#4ade80':'#f87171';
   const sign = tx.amount>=0?'+':'-';
   const chipHTML = flags.map(f=>`<span class="flag-chip ${f.cls}">${f.label}</span>`).join('');
-  return `<div class="tx-row">
+  return `<div class="tx-row" data-action="txDetail" data-tx-id="${tx.id}">
     <div class="tx-icon" style="background:${CAT_COLORS[tx.category]||'#64748b'}18">${tx.emoji}</div>
     <div style="flex:1;min-width:0">
       <p style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.desc}</p>
@@ -925,33 +928,91 @@ function computeCats(){
 // ═══════════════════════════════════════════════════════
 //  MORE TAB
 // ═══════════════════════════════════════════════════════
+function calcHealthScore(){
+  const monthExp = S.transactions.filter(t=>t.amount<0 && new Date(t.date)>=new Date(Date.now()-30*864e5)).reduce((s,t)=>s+Math.abs(t.amount),0);
+  const savingsRate = S.monthlyIncome>0 ? Math.max(0,(S.monthlyIncome-monthExp)/S.monthlyIncome) : 0;
+  const totalDebt = S.debts.filter(d=>d.dir==='owe').reduce((s,d)=>s+(d.total-d.paid),0);
+  const debtRatio = netWealth()>0 ? Math.min(1, totalDebt/netWealth()) : 1;
+  const score = Math.round((savingsRate*50) + ((1-debtRatio)*30) + (S.accounts.length>0?20:0));
+  return Math.min(100, Math.max(0, score));
+}
+
 function renderMore(){
   const el = document.getElementById('tab-more');
   const totalOwed = S.debts.filter(d=>d.dir==='owe').reduce((s,d)=>s+(d.total-d.paid),0);
   const totalLent = S.debts.filter(d=>d.dir==='lent').reduce((s,d)=>s+(d.total-d.paid),0);
+  const score = calcHealthScore();
+  const scoreLabel = score<40?'Poor':score<65?'Fair':score<80?'Good':'Excellent';
+  const scoreColor = score<40?'#f87171':score<65?'#fcd34d':score<80?'#4ade80':'#22c55e';
+  const scoreBg = score<40?'rgba(239,68,68,.12)':score<65?'rgba(245,158,11,.12)':score<80?'rgba(34,197,94,.12)':'rgba(34,197,94,.15)';
+
+  // Monthly budget categories
+  const monthExp = S.transactions.filter(t=>t.amount<0 && new Date(t.date)>=new Date(Date.now()-30*864e5));
+  const catSpend = {};
+  monthExp.forEach(t=>{ catSpend[t.category]=(catSpend[t.category]||0)+Math.abs(t.amount); });
+  const budgetCats = Object.entries(catSpend).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const totalMonthSpend = monthExp.reduce((s,t)=>s+Math.abs(t.amount),0);
 
   el.innerHTML = `
     <h1 style="font-size:22px;font-weight:800;letter-spacing:-.03em;margin-bottom:18px">Payments & More</h1>
 
-    <!-- Debt summary -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
-      <div class="glass" style="padding:16px;border-color:rgba(239,68,68,.2)">
-        <p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">You Owe</p>
-        <p style="font-size:20px;font-weight:800;color:#fca5a5">${fmtPKR(totalOwed)}</p>
+    <!-- Financial Health Score -->
+    <div class="glass" style="padding:18px;margin-bottom:18px;border-color:${scoreColor}33">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h2 style="font-size:15px;font-weight:800">Financial Health Score</h2>
+        <span style="font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px;background:${scoreBg};color:${scoreColor}">${scoreLabel}</span>
       </div>
-      <div class="glass" style="padding:16px;border-color:rgba(34,197,94,.2)">
-        <p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Owed to You</p>
-        <p style="font-size:20px;font-weight:800;color:#86efac">${fmtPKR(totalLent)}</p>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="position:relative;width:80px;height:80px;flex-shrink:0">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="8"/>
+            <circle cx="40" cy="40" r="34" fill="none" stroke="${scoreColor}" stroke-width="8"
+              stroke-dasharray="${(score/100*213.6).toFixed(1)} 213.6"
+              stroke-dashoffset="53.4"
+              stroke-linecap="round"
+              transform="rotate(-90 40 40)"/>
+          </svg>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">
+            <p style="font-size:20px;font-weight:800;color:${scoreColor};line-height:1">${score}</p>
+            <p style="font-size:8px;color:var(--text3);font-weight:700">/100</p>
+          </div>
+        </div>
+        <div style="flex:1">
+          <div style="margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+              <span style="font-size:11px;color:var(--text3);font-weight:600">Savings Rate</span>
+              <span style="font-size:11px;font-weight:700">${S.monthlyIncome>0?Math.round(Math.max(0,(S.monthlyIncome-totalMonthSpend)/S.monthlyIncome)*100):0}%</span>
+            </div>
+            <div class="prog" style="height:5px"><div class="prog-fill" style="width:${S.monthlyIncome>0?Math.min(100,Math.round(Math.max(0,(S.monthlyIncome-totalMonthSpend)/S.monthlyIncome)*100)):0}%;background:#4ade80"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+              <span style="font-size:11px;color:var(--text3);font-weight:600">Debt Ratio</span>
+              <span style="font-size:11px;font-weight:700">${netWealth()>0?Math.round(Math.min(100,totalOwed/netWealth()*100)):100}%</span>
+            </div>
+            <div class="prog" style="height:5px"><div class="prog-fill" style="width:${netWealth()>0?Math.min(100,Math.round(totalOwed/netWealth()*100)):100}%;background:#f87171"></div></div>
+          </div>
+        </div>
       </div>
     </div>
 
+    <!-- Debts & Loans -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <h2 style="font-size:15px;font-weight:800">Debts & Loans</h2>
       <button class="btn-ghost btn-sm" onclick="document.getElementById('add-debt-form').style.display=document.getElementById('add-debt-form').style.display==='none'?'flex':'none'">+ Add</button>
     </div>
-
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div class="glass" style="padding:14px;border-color:rgba(239,68,68,.2)">
+        <p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">You Owe</p>
+        <p style="font-size:18px;font-weight:800;color:#fca5a5">${fmtPKR(totalOwed)}</p>
+      </div>
+      <div class="glass" style="padding:14px;border-color:rgba(34,197,94,.2)">
+        <p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Owed to You</p>
+        <p style="font-size:18px;font-weight:800;color:#86efac">${fmtPKR(totalLent)}</p>
+      </div>
+    </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
-      ${S.debts.map(debtCardHTML).join('')}
+      ${S.debts.length ? S.debts.map(debtCardHTML).join('') : '<div class="glass" style="padding:16px;text-align:center"><p style="color:var(--text3);font-size:13px">No debts or loans tracked</p></div>'}
     </div>
 
     <!-- Add debt form (hidden by default) -->
@@ -973,14 +1034,47 @@ function renderMore(){
       <button class="btn btn-primary btn-sm" style="width:100%" data-action="addDebt">Save Debt</button>
     </div>
 
+    <!-- Monthly Budget -->
+    <div class="glass" style="padding:16px;margin-bottom:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h2 style="font-size:14px;font-weight:800">Monthly Budget</h2>
+        <span style="font-size:11px;color:var(--text3)">Last 30 days</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;padding:10px;background:rgba(255,255,255,.04);border-radius:10px">
+        <div style="text-align:center">
+          <p style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Income</p>
+          <p style="font-size:15px;font-weight:800;color:#4ade80">${fmtPKR(S.monthlyIncome)}</p>
+        </div>
+        <div style="text-align:center;border-left:1px solid var(--border);border-right:1px solid var(--border);padding:0 12px">
+          <p style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Spent</p>
+          <p style="font-size:15px;font-weight:800;color:#f87171">${fmtPKR(totalMonthSpend)}</p>
+        </div>
+        <div style="text-align:center">
+          <p style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Remaining</p>
+          <p style="font-size:15px;font-weight:800;color:${S.monthlyIncome-totalMonthSpend>=0?'#4ade80':'#f87171'}">${fmtPKR(Math.abs(S.monthlyIncome-totalMonthSpend))}</p>
+        </div>
+      </div>
+      ${budgetCats.length ? budgetCats.map(([cat,amt])=>{
+        const pct = S.monthlyIncome>0 ? Math.min(100,Math.round(amt/S.monthlyIncome*100)) : 0;
+        const col = CAT_COLORS[cat]||'#64748b';
+        return `<div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:${col};display:inline-block"></span>${cat}</span>
+            <span style="font-size:12px;font-weight:700">${fmtPKR(amt)} <span style="color:var(--text3);font-weight:500">(${pct}%)</span></span>
+          </div>
+          <div class="prog" style="height:6px"><div class="prog-fill" style="width:${pct}%;background:${col}"></div></div>
+        </div>`;
+      }).join('') : '<p style="color:var(--text3);font-size:13px;text-align:center;padding:8px 0">No spending data for last 30 days</p>'}
+    </div>
+
     <!-- Settings -->
     <div class="glass" style="padding:16px;margin-bottom:14px">
       <h2 style="font-size:14px;font-weight:800;margin-bottom:14px">Settings</h2>
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
-        <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0">F</div>
+        <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0;cursor:pointer" data-action="openModal" data-modal="profile">F</div>
         <div>
           <p style="font-size:15px;font-weight:800">Farhan Naz</p>
-          <p style="font-size:12px;color:var(--text2)">farhan@monowallet.pk</p>
+          <p style="font-size:12px;color:var(--text2)">farhannaz362@gmail.com</p>
         </div>
       </div>
       <div style="margin-bottom:12px">
@@ -992,7 +1086,7 @@ function renderMore(){
       </div>
     </div>
 
-    <!-- Danger zone -->
+    <!-- Data management -->
     <div class="glass" style="padding:16px;margin-bottom:8px;border-color:rgba(239,68,68,.18)">
       <h2 style="font-size:13px;font-weight:800;color:#fca5a5;margin-bottom:10px">Data</h2>
       <p style="font-size:12px;color:var(--text3);margin-bottom:12px">All data lives in-memory (prototype). Clearing resets balances.</p>
@@ -1033,6 +1127,7 @@ function debtCardHTML(d){
       <span style="font-size:11px;color:var(--text3)">${pct}% paid · ${fmtPKR(d.total)} total</span>
       <span style="font-size:11px;color:${urgColor}">Due ${fmtDate(d.due)}</span>
     </div>
+    ${d.dir==='owe'?`<button class="btn btn-sm" style="margin-top:10px;background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.25);font-weight:700;border-radius:9px;padding:8px 14px;font-size:12px;cursor:pointer;font-family:inherit;width:100%" data-action="settleDebt" data-debt-id="${d.id}">✅ Settle Debt</button>`:''}
   </div>`;
 }
 
@@ -1080,8 +1175,92 @@ function renderModal(){
       setTimeout(()=>{ const f=document.querySelector('[data-pin-idx="0"]'); if(f) f.focus(); },60);
       break;
     case 'transfer': S.transferStep=1; S.transferDraft={fromId:'',toId:'',amount:'',purpose:''}; closeModal(); switchTab('transfer'); break;
+    case 'profile': body.innerHTML = renderProfileModal(); break;
+    case 'txDetail': body.innerHTML = renderTxDetailModal(); break;
     default: body.innerHTML = '';
   }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PROFILE MODAL
+// ═══════════════════════════════════════════════════════
+function renderProfileModal(){
+  const totalAssets = netWealth();
+  const totalDebts = S.debts.filter(d=>d.dir==='owe').reduce((s,d)=>s+(d.total-d.paid),0);
+  const netWorth = totalAssets - totalDebts;
+  return `<div style="padding-top:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <h2 style="font-size:18px;font-weight:800">My Profile</h2>
+      <button class="btn-icon" data-action="closeModal"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:20px">
+      <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff">F</div>
+      <div style="text-align:center">
+        <p style="font-size:18px;font-weight:800">Farhan Naz</p>
+        <p style="font-size:12px;color:var(--text3);margin-top:2px">farhannaz362@gmail.com</p>
+        <p style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:600">MonoWallet ID: FARHAN_NAZ_8847</p>
+      </div>
+    </div>
+    <div class="glass" style="padding:16px;margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">
+        <div><p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Total Assets</p><p style="font-size:15px;font-weight:800;color:#4ade80">${fmtPKR(totalAssets)}</p></div>
+        <div style="border-left:1px solid var(--border);border-right:1px solid var(--border)"><p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Debts</p><p style="font-size:15px;font-weight:800;color:#f87171">${fmtPKR(totalDebts)}</p></div>
+        <div><p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Net Worth</p><p style="font-size:15px;font-weight:800;color:${netWorth>=0?'#4ade80':'#f87171'}">${fmtPKR(netWorth)}</p></div>
+      </div>
+    </div>
+    <div class="glass" style="padding:4px 0;margin-bottom:14px">
+      ${[
+        {icon:'🏦',label:'Linked Accounts',val:`${S.accounts.length} banks + MonoWallet`},
+        {icon:'💳',label:'MonoWallet Balance',val:fmtPKR(S.monoWallet.balance)},
+        {icon:'📊',label:'Monthly Income',val:fmtPKR(S.monthlyIncome)},
+        {icon:'🗓️',label:'Member Since',val:'October 2024'},
+      ].map(r=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:18px">${r.icon}</span><span style="font-size:13px;font-weight:600">${r.label}</span></div>
+        <span style="font-size:13px;color:var(--text2);font-weight:700">${r.val}</span>
+      </div>`).join('')}
+    </div>
+    <button class="btn btn-secondary" style="width:100%" data-action="closeModal">Close</button>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  TX DETAIL MODAL
+// ═══════════════════════════════════════════════════════
+function renderTxDetailModal(){
+  const tx = S.modal.data.tx;
+  if(!tx) return '';
+  const acc = tx.accId==='monoWallet'
+    ? {bankName:'MonoWallet',type:'Digital Wallet',no:'Virtual',color:'#6366f1',abbr:'MW'}
+    : (getAcc(tx.accId)||{bankName:'Unknown',type:'Account',no:'N/A',color:'#64748b',abbr:'?'});
+  const flags = classifyTx(tx);
+  const isDebit = tx.amount < 0;
+  const col = isDebit ? '#f87171' : '#4ade80';
+  return `<div style="padding-top:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <h2 style="font-size:18px;font-weight:800">Transaction Detail</h2>
+      <button class="btn-icon" data-action="closeModal"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:40px;margin-bottom:8px">${tx.emoji||'💸'}</div>
+      <p style="font-size:15px;font-weight:700;margin-bottom:4px">${tx.desc}</p>
+      <p style="font-size:32px;font-weight:800;color:${col}">${isDebit?'-':'+'} ${fmtPKR(Math.abs(tx.amount))}</p>
+    </div>
+    ${flags.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:14px">${flags.map(f=>`<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(245,158,11,.12);color:#fbbf24;border:1px solid rgba(245,158,11,.25)">${f.label}</span>`).join('')}</div>`:''}
+    <div class="glass" style="padding:4px 0;margin-bottom:14px">
+      ${[
+        {label:'Date', val:new Date(tx.date).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})},
+        {label:'Category', val:tx.category},
+        {label:'Type', val:tx.type},
+        {label:'Account', val:acc.bankName+' '+acc.type},
+        {label:'Account No.', val:acc.no},
+        {label:'Transaction ID', val:tx.id},
+      ].map(r=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border)">
+        <span style="font-size:12px;color:var(--text3);font-weight:600">${r.label}</span>
+        <span style="font-size:13px;font-weight:700;text-align:right;max-width:200px;overflow:hidden;text-overflow:ellipsis">${r.val}</span>
+      </div>`).join('')}
+    </div>
+    <button class="btn btn-secondary" style="width:100%" data-action="closeModal">Done</button>
+  </div>`;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1795,6 +1974,31 @@ document.addEventListener('click', e=>{
       toast('Reset complete','info');
       renderTab(S.activeTab);
       break;
+
+    case 'settleDebt': {
+      const debtId = el.dataset.debtId;
+      const idx = S.debts.findIndex(d=>d.id===debtId);
+      if(idx!==-1){
+        const d = S.debts[idx];
+        const remaining = d.total - d.paid;
+        const src = S.accounts[0] || null;
+        if(src && src.balance >= remaining){
+          src.balance -= remaining;
+          S.transactions.unshift({id:S.uid(), date:new Date().toISOString().slice(0,10), desc:`Settled: ${d.label}`, amount:-remaining, type:'debit', category:'Transfer', accId:src.id, emoji:'✅'});
+        }
+        S.debts.splice(idx,1);
+        toast(`Debt "${d.label}" settled!`,'success');
+        renderMore();
+      }
+      break;
+    }
+
+    case 'txDetail': {
+      const txId = el.dataset.txId;
+      const tx = S.transactions.find(t=>t.id===txId);
+      if(tx) openModal('txDetail', {tx});
+      break;
+    }
   }
 });
 
