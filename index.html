@@ -51,7 +51,7 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text1);dis
 .cur-dd-btn:hover{background:var(--glass3);border-color:var(--accent)}
 .cur-dd-btn .dd-chevron{transition:transform .18s}
 .cur-dd-btn.open .dd-chevron{transform:rotate(180deg)}
-.cur-dropdown{position:absolute;top:calc(100% + 7px);left:50%;transform:translateX(-50%);min-width:150px;background:var(--bg3);border:1px solid var(--border2);border-radius:14px;box-shadow:0 14px 48px rgba(0,0,0,.22);z-index:300;overflow:hidden;animation:slideUp .16s ease both}
+.cur-dropdown{position:absolute;top:calc(100% + 7px);right:0;left:auto;transform:none;min-width:150px;background:var(--bg3);border:1px solid var(--border2);border-radius:14px;box-shadow:0 14px 48px rgba(0,0,0,.22);z-index:300;overflow:hidden;animation:slideUp .16s ease both}
 .cur-dd-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;font-size:13px;font-weight:600;color:var(--text1);cursor:pointer;transition:background .12s;font-family:inherit;border:none;background:none;width:100%;text-align:left}
 .cur-dd-item:hover{background:var(--glass2)}
 .cur-dd-item.sel{color:var(--accent)}
@@ -111,11 +111,13 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text1);dis
 .flag-rec{background:rgba(139,92,246,.12);color:#c4b5fd}
 .flag-unusual{background:rgba(245,158,11,.12);color:#fcd34d}
 .sec-lbl{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;padding:10px 0 5px;display:flex;align-items:center;gap:6px;color:var(--text3)}
-#toast-ctr{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;pointer-events:none;width:88%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:8px}
+#toast-ctr{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:9999;pointer-events:none;width:88%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:8px}
 .toast{background:var(--bg3);border:1px solid var(--border2);border-radius:14px;padding:13px 18px;box-shadow:0 12px 40px rgba(0,0,0,.55);font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;width:100%;color:var(--text1);animation:toastUp .3s cubic-bezier(.34,1.4,.64,1) both}
-@keyframes toastUp{from{opacity:0;transform:translateY(28px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes toastUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 .toast.out{animation:toastDown .22s ease forwards}
-@keyframes toastDown{to{opacity:0;transform:translateY(-14px) scale(.94)}}
+@keyframes toastDown{to{opacity:0;transform:translateY(18px)}}
+.skel{background:linear-gradient(90deg,var(--glass2) 25%,var(--glass3) 50%,var(--glass2) 75%);background-size:200% 100%;animation:skelShimmer 1.5s ease infinite}
+@keyframes skelShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 #confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:9999;display:none}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes fadeOut{to{opacity:0;transform:scale(.98)}}
@@ -128,25 +130,56 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text1);dis
 <body>
 <div id="signin">
 <div class="si-inner">
-  <div class="si-logo"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg></div>
+  <div class="si-logo">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="7" width="20" height="14" rx="3"/>
+      <path d="M16 7V5a2 2 0 00-2-2H8a2 2 0 00-2 2v2"/>
+      <rect x="15" y="12" width="5" height="4" rx="1" fill="rgba(255,255,255,.35)" stroke="rgba(255,255,255,.7)" stroke-width="1.2"/>
+    </svg>
+  </div>
   <h1 style="font-size:28px;font-weight:800;letter-spacing:-.03em;margin-bottom:5px">MonoWallet</h1>
   <p style="font-size:13px;color:var(--text3);margin-bottom:28px">All your banks, one dashboard</p>
-  <p style="font-size:15px;font-weight:700;margin-bottom:12px;color:var(--text1)">Welcome to MonoWallet</p>
-  <input class="field" type="text" id="si-name" placeholder="Your full name" autocomplete="name" style="width:100%;margin-bottom:14px;text-align:center"/>
-  <p style="font-size:13px;font-weight:600;margin-bottom:2px;color:var(--text1)">Enter your 4-digit PIN</p>
-  <p style="font-size:11px;color:var(--text3);margin-bottom:2px">Hint: <strong style="color:var(--accent)">1 2 3 4</strong></p>
-  <div class="pin-row">
-    <input class="pin-dot" type="password" maxlength="1" inputmode="numeric" data-si-idx="0" autocomplete="off"/>
-    <input class="pin-dot" type="password" maxlength="1" inputmode="numeric" data-si-idx="1" autocomplete="off"/>
-    <input class="pin-dot" type="password" maxlength="1" inputmode="numeric" data-si-idx="2" autocomplete="off"/>
-    <input class="pin-dot" type="password" maxlength="1" inputmode="numeric" data-si-idx="3" autocomplete="off"/>
+  <div style="width:100%;display:flex;flex-direction:column;gap:10px;margin-bottom:6px">
+    <input class="field" type="text" id="si-name" placeholder="Your full name" autocomplete="name"/>
+    <input class="field" type="text" id="si-username" placeholder="Username" autocomplete="username"/>
+    <input class="field" type="password" id="si-password" placeholder="Password" autocomplete="current-password"/>
   </div>
-  <p id="si-err" style="display:none;color:var(--red);font-size:12px;font-weight:600;margin-bottom:10px;text-align:center">Incorrect PIN. Try again.</p>
-  <button class="btn btn-primary" style="width:100%;margin-top:6px" data-action="doSignIn">Sign In</button>
+  <p style="font-size:11px;color:var(--text3);margin-bottom:14px;align-self:flex-start">Demo → Username: <strong style="color:var(--accent)">demo</strong> · Password: <strong style="color:var(--accent)">monowallet</strong></p>
+  <p id="si-err" style="display:none;color:var(--red);font-size:12px;font-weight:600;margin-bottom:10px;text-align:center">Incorrect credentials. Try again.</p>
+  <button class="btn btn-primary" style="width:100%" data-action="doSignIn">Sign In →</button>
+  <p style="font-size:11px;color:var(--text3);margin-top:24px">© Farhan_Labs 2026</p>
 </div>
 </div>
 <div id="app" style="display:none">
   <header id="app-header"></header>
+  <div id="skel-overlay" style="display:none;position:absolute;inset:0;background:var(--bg);z-index:80;flex-direction:column;padding:72px 16px 20px;overflow:hidden">
+    <div style="text-align:center;padding:16px 0 20px">
+      <div class="skel" style="width:130px;height:13px;border-radius:7px;margin:0 auto 14px"></div>
+      <div class="skel" style="width:220px;height:46px;border-radius:12px;margin:0 auto 6px"></div>
+      <div class="skel" style="width:90px;height:10px;border-radius:6px;margin:0 auto 16px"></div>
+      <div class="skel" style="width:80px;height:30px;border-radius:20px;margin:0 auto 8px"></div>
+      <div class="skel" style="width:120px;height:10px;border-radius:6px;margin:0 auto"></div>
+    </div>
+    <div class="skel" style="height:56px;border-radius:14px;margin-bottom:16px"></div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <div class="skel" style="height:44px;border-radius:100px;flex:1"></div>
+      <div class="skel" style="height:44px;border-radius:100px;flex:1"></div>
+      <div class="skel" style="height:44px;border-radius:100px;flex:1"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+      <div class="skel" style="height:90px;border-radius:16px"></div>
+      <div class="skel" style="height:90px;border-radius:16px"></div>
+      <div class="skel" style="height:90px;border-radius:16px"></div>
+      <div class="skel" style="height:90px;border-radius:16px"></div>
+      <div class="skel" style="height:90px;border-radius:16px"></div>
+      <div class="skel" style="height:90px;border-radius:16px"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="skel" style="height:68px;border-radius:14px"></div>
+      <div class="skel" style="height:68px;border-radius:14px"></div>
+      <div class="skel" style="height:68px;border-radius:14px"></div>
+    </div>
+  </div>
   <section id="tab-home"     class="tab-panel active"></section>
   <section id="tab-accounts" class="tab-panel"></section>
   <section id="tab-spending" class="tab-panel"></section>
@@ -194,9 +227,9 @@ const CRYPTO_WALLETS=[
 ];
 const CRYPTO_COINS={BTC:{name:'Bitcoin',color:'#f7931a'},ETH:{name:'Ethereum',color:'#627eea'},USDT:{name:'Tether',color:'#26a17b'},BNB:{name:'BNB',color:'#F0B90B'},SOL:{name:'Solana',color:'#9945ff'},XRP:{name:'XRP',color:'#00aae4'},USDC:{name:'USD Coin',color:'#2775ca'},LTC:{name:'Litecoin',color:'#a6a9aa'}};
 const CRYPTO_PRICES_PKR={BTC:19400000,ETH:1040000,USDT:278,USDC:278,BNB:161000,SOL:51000,XRP:172,LTC:24000};
-const BASE_RATES={PKR:1,USD:0.003597,EUR:0.003311,GBP:0.002833,AED:0.013209,SAR:0.013477,CAD:0.004926,AUD:0.005556};
-const CUR_SYM={PKR:'Rs ',USD:'$ ',EUR:'€ ',GBP:'£ ',AED:'AED ',SAR:'SAR ',CAD:'CA$ ',AUD:'A$ '};
-const CUR_LIST=['PKR','USD','EUR','GBP','AED','SAR','CAD','AUD'];
+const BASE_RATES={PKR:1,USD:0.003597,EUR:0.003311,GBP:0.002833,AED:0.013209,SAR:0.013477,CAD:0.004926,AUD:0.005556,KWD:0.001103};
+const CUR_SYM={PKR:'Rs ',USD:'$ ',EUR:'€ ',GBP:'£ ',AED:'AED ',SAR:'SAR ',CAD:'CA$ ',AUD:'A$ ',KWD:'KD '};
+const CUR_LIST=['PKR','USD','EUR','GBP','AED','SAR','CAD','AUD','KWD'];
 const RECURRING_KW=['netflix','spotify','youtube premium','amazon prime','hbo','disney','gym','subscription','monthly fee','apple music','prime','ptcl','sui gas','lesco'];
 const CAT_COLORS={Income:'#22c55e',Groceries:'#f97316',Transport:'#06b6d4',Utilities:'#f59e0b',Entertainment:'#ec4899',Dining:'#a78bfa',Health:'#22d3ee',Shopping:'#fb7185',Housing:'#6366f1',Transfer:'#94a3b8',Other:'#64748b'};
 const S={
@@ -313,17 +346,26 @@ function computeAIInsights(){
   return ins.slice(0,3);
 }
 // SIGN-IN
-function handleSIInput(el,idx){el.value=el.value.replace(/\D/g,'').slice(-1);el.classList.toggle('filled',!!el.value);if(el.value&&idx<3){const n=document.querySelector(`[data-si-idx="${idx+1}"]`);if(n)n.focus();}if(idx===3&&el.value){const all=[0,1,2,3].every(i=>{const e=document.querySelector(`[data-si-idx="${i}"]`);return e&&e.value;});if(all)setTimeout(verifySIPin,120);}}
 function verifySIPin(){
   const nameVal=(document.getElementById('si-name')?.value||'').trim();
-  if(!nameVal){const err=document.getElementById('si-err');if(err){err.textContent='Please enter your name.';err.style.display='block';}setTimeout(()=>{const err2=document.getElementById('si-err');if(err2)err2.style.display='none';document.getElementById('si-name')?.focus();},1500);return;}
-  const pin=[0,1,2,3].map(i=>{const e=document.querySelector(`[data-si-idx="${i}"]`);return e?e.value:'';}).join('');
-  if(pin==='1234'){S.userName=nameVal;completeSignIn();}
-  else{document.querySelectorAll('[data-si-idx]').forEach(b=>{b.classList.add('err','shake');b.value='';});const err=document.getElementById('si-err');if(err){err.textContent='Incorrect PIN. Try again.';err.style.display='block';}setTimeout(()=>{document.querySelectorAll('[data-si-idx]').forEach(b=>b.classList.remove('err','shake'));const f=document.querySelector('[data-si-idx="0"]');if(f)f.focus();},500);}
+  const user=(document.getElementById('si-username')?.value||'').trim();
+  const pass=(document.getElementById('si-password')?.value||'');
+  const showErr=(msg)=>{const e=document.getElementById('si-err');if(e){e.textContent=msg;e.style.display='block';}setTimeout(()=>{const e2=document.getElementById('si-err');if(e2)e2.style.display='none';},3000);};
+  if(!nameVal){showErr('Please enter your full name.');document.getElementById('si-name')?.focus();return;}
+  if(!user){showErr('Please enter a username.');document.getElementById('si-username')?.focus();return;}
+  if(!pass){showErr('Please enter your password.');document.getElementById('si-password')?.focus();return;}
+  if(pass==='monowallet'||pass==='1234'){S.userName=nameVal;completeSignIn();}
+  else{document.getElementById('si-password').value='';document.getElementById('si-password').classList.add('shake');setTimeout(()=>document.getElementById('si-password')?.classList.remove('shake'),400);showErr('Incorrect password.');}
 }
 function completeSignIn(){
   const si=document.getElementById('signin');si.style.animation='fadeOut .35s ease both';
-  setTimeout(()=>{si.style.display='none';const app=document.getElementById('app');app.style.display='flex';app.style.animation='fadeIn .35s ease both';renderHeader();renderBottomNav();renderHome();startRates();},320);
+  setTimeout(()=>{
+    si.style.display='none';const app=document.getElementById('app');app.style.display='flex';app.style.animation='fadeIn .35s ease both';
+    renderHeader();renderBottomNav();startRates();
+    const skel=document.getElementById('skel-overlay');skel.style.display='flex';
+    const dur=700+Math.random()*600;
+    setTimeout(()=>{skel.style.transition='opacity .3s';skel.style.opacity='0';setTimeout(()=>{skel.style.display='none';skel.style.opacity='';skel.style.transition='';renderHome();},300);},dur);
+  },320);
 }
 // HEADER
 function renderHeader(){
@@ -353,6 +395,7 @@ function renderHome(){
   const h=new Date().getHours(),gr=h<5?'Good night':h<12?'Good morning':h<17?'Good afternoon':'Good evening';
   const fn=S.userName.split(' ')[0]||S.userName||'there';
   const bal=S.balanceHidden?'Rs ••••••':fmtAmt(nw);
+  const fz=((b)=>b.length>18?22:b.length>15?26:b.length>12?30:b.length>9?36:42)(bal);
   const eyePath=S.balanceHidden?'<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>':'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
   const sc=computeAIInsights()[0];
   const shortcuts=[
@@ -367,17 +410,12 @@ function renderHome(){
   <div class="hero-section" style="margin-bottom:18px">
     <div class="hero-glow"></div>
     <p style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:14px">${gr}, ${fn}</p>
-    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:2px">
-      <button style="width:32px;height:32px;border-radius:50%;background:var(--glass2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0" data-action="toggleBalance">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2" stroke-linecap="round">${eyePath}</svg>
-      </button>
-      <p id="nw-display" style="font-size:40px;font-weight:800;letter-spacing:-.04em;color:var(--hero-num);transition:opacity .18s">${bal}</p>
-      <div class="cur-dd-wrapper" id="cur-dd-wrapper">
-        <button class="cur-dd-btn${S.curDDOpen?' open':''}" data-action="toggleCurDD">${S.displayCurrency}<svg class="dd-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-        ${S.curDDOpen?`<div class="cur-dropdown" id="cur-dropdown">${S.recentCurrencies.map(c=>`<button class="cur-dd-item${c===S.displayCurrency?' sel':''}" data-action="setCurFromDD" data-cur="${c}">${c}${c===S.displayCurrency?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>':''}</button>`).join('')}<div class="cur-dd-divider"></div><button class="cur-dd-item" data-action="openCurModal" style="color:var(--accent)">More <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button></div>`:''}
-      </div>
-    </div>
-    <p style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Net Wealth</p>
+    <p id="nw-display" style="font-size:${fz}px;font-weight:800;letter-spacing:-.04em;color:var(--hero-num);transition:opacity .18s;white-space:nowrap;margin-bottom:6px">${bal}</p>
+    <div style="display:flex;justify-content:center;margin-bottom:8px"><div class="cur-dd-wrapper" id="cur-dd-wrapper">
+      <button class="cur-dd-btn${S.curDDOpen?' open':''}" data-action="toggleCurDD">${S.displayCurrency}<svg class="dd-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+      ${S.curDDOpen?`<div class="cur-dropdown" id="cur-dropdown">${S.recentCurrencies.map(c=>`<button class="cur-dd-item${c===S.displayCurrency?' sel':''}" data-action="setCurFromDD" data-cur="${c}">${c}${c===S.displayCurrency?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>':''}</button>`).join('')}<div class="cur-dd-divider"></div><button class="cur-dd-item" data-action="openCurModal" style="color:var(--accent)">More <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button></div>`:''}
+    </div></div>
+    <p style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px">Net Wealth <button style="background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;padding:2px;color:var(--text3)" data-action="toggleBalance"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">${eyePath}</svg></button></p>
     ${!S.balanceHidden?`<div style="display:flex;gap:16px;justify-content:center;margin-bottom:10px"><span style="font-size:12px;color:var(--text2)"><span style="color:var(--clr-up);font-weight:800">↑</span> Assets ${fmtPKR(assets)}</span>${debts>0?`<span style="font-size:12px;color:var(--text2)"><span style="color:var(--clr-down);font-weight:800">↓</span> Debts ${fmtPKR(debts)}</span>`:'<span style="font-size:12px;color:var(--accent)">Debt-free</span>'}</div>`:'<div style="margin-bottom:10px"></div>'}
     <div style="display:flex;align-items:center;justify-content:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;animation:pulse 2s infinite"></span><span id="rate-ts" style="font-size:11px;color:var(--text3)">${secsAgo(S.ratesTs)}s ago</span></div>
   </div>
@@ -543,7 +581,7 @@ function renderMore(){
   <div class="card" style="padding:14px;margin-bottom:8px;cursor:pointer" data-action="openModal" data-modal="profile">
     <div style="display:flex;align-items:center;gap:12px"><div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff">${(S.userName[0]||'?').toUpperCase()}</div><div style="flex:1"><p style="font-size:15px;font-weight:800;color:var(--text1)">${S.userName}</p><p style="font-size:12px;color:var(--text3)">Profile, appearance &amp; settings</p></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
   </div>
-  <p style="text-align:center;color:var(--text3);font-size:11px;padding:12px 0">MonoWallet v4.0 · Pakistan Banking Dashboard</p>`;
+  <p style="text-align:center;color:var(--text3);font-size:11px;padding:12px 0">MonoWallet v4.0 · Pakistan Banking Dashboard<br><span style="font-size:10px;opacity:.75">© Farhan_Labs 2026</span></p>`;
 }
 function debtCardHTML(d){
   const rem=d.total-d.paid,pct=Math.round((d.paid/d.total)*100),daysLeft=Math.ceil((new Date(d.due)-new Date())/864e5);
@@ -719,10 +757,9 @@ document.addEventListener('click',e=>{
       closeModal();
       const si2=document.getElementById('signin'),app2=document.getElementById('app');
       app2.style.display='none';si2.style.display='flex';si2.style.animation='fadeIn .4s ease both';
-      [0,1,2,3].forEach(i=>{const e2=document.querySelector(`[data-si-idx="${i}"]`);if(e2){e2.value='';e2.classList.remove('filled');}});
-      const siName=document.getElementById('si-name');if(siName)siName.value='';
-      document.getElementById('si-err').style.display='none';
-      setTimeout(()=>{const f=document.querySelector('[data-si-idx="0"]');if(f)f.focus();},100);
+      ['si-name','si-username','si-password'].forEach(id=>{const e2=document.getElementById(id);if(e2)e2.value='';});
+      const siErrEl=document.getElementById('si-err');if(siErrEl)siErrEl.style.display='none';
+      setTimeout(()=>{const f=document.getElementById('si-name');if(f)f.focus();},100);
       break;
     case 'lbNext': handleLBNext(); break;
     case 'lbBack': S.modal.step=Math.max(0,S.modal.step-1);if(S.modal.step===0){S.modal.data.linkType=null;S.modal.data.selectedBank=null;S.modal.data.selectedCryptoWallet=null;}renderModal(); break;
@@ -761,6 +798,7 @@ document.addEventListener('input',e=>{
   if(t.dataset.otpIdx!==undefined){handleOTPInput(t,parseInt(t.dataset.otpIdx));return;}
 });
 document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){const t=e.target;if(['si-name','si-username','si-password'].includes(t.id)){verifySIPin();return;}}
   if(e.key!=='Backspace')return;
   const t=e.target;let prefix=null,idx=-1;
   if(t.dataset.siIdx!==undefined){prefix='si';idx=parseInt(t.dataset.siIdx);}
