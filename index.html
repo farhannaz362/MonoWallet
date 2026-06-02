@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"/>
@@ -46,6 +46,16 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text1);dis
 .cur-pill{padding:5px 11px;border-radius:100px;font-size:11px;font-weight:700;cursor:pointer;transition:all .14s;border:1px solid var(--border2);color:var(--text3);background:transparent;font-family:inherit}
 .cur-pill.active{background:var(--adim);color:var(--accent);border-color:rgba(16,185,129,.4)}
 .cur-pill:hover:not(.active){background:var(--glass2)}
+.cur-dd-wrapper{position:relative;display:inline-flex;align-items:center}
+.cur-dd-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--border2);color:var(--text1);background:var(--glass2);font-family:inherit;transition:all .14s}
+.cur-dd-btn:hover{background:var(--glass3);border-color:var(--accent)}
+.cur-dd-btn .dd-chevron{transition:transform .18s}
+.cur-dd-btn.open .dd-chevron{transform:rotate(180deg)}
+.cur-dropdown{position:absolute;top:calc(100% + 7px);left:50%;transform:translateX(-50%);min-width:150px;background:var(--bg3);border:1px solid var(--border2);border-radius:14px;box-shadow:0 14px 48px rgba(0,0,0,.22);z-index:300;overflow:hidden;animation:slideUp .16s ease both}
+.cur-dd-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;font-size:13px;font-weight:600;color:var(--text1);cursor:pointer;transition:background .12s;font-family:inherit;border:none;background:none;width:100%;text-align:left}
+.cur-dd-item:hover{background:var(--glass2)}
+.cur-dd-item.sel{color:var(--accent)}
+.cur-dd-divider{height:1px;background:var(--border);margin:2px 0}
 .shortcut-tile{background:var(--lqg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--lqg-border);border-radius:18px;padding:16px 10px 12px;cursor:pointer;transition:all .18s;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;box-shadow:var(--card-shadow)}
 .shortcut-tile:hover{background:var(--glass2);transform:translateY(-3px)}
 .shortcut-tile:active{transform:scale(.96)}
@@ -177,7 +187,7 @@ const RECURRING_KW=['netflix','spotify','youtube premium','amazon prime','hbo','
 const CAT_COLORS={Income:'#22c55e',Groceries:'#f97316',Transport:'#06b6d4',Utilities:'#f59e0b',Entertainment:'#ec4899',Dining:'#a78bfa',Health:'#22d3ee',Shopping:'#fb7185',Housing:'#6366f1',Transfer:'#94a3b8',Other:'#64748b'};
 const S={
   activeTab:'home',displayCurrency:'PKR',rates:{...BASE_RATES},ratesTs:Date.now(),
-  statementPeriod:'month',darkMode:true,balanceHidden:false,
+  statementPeriod:'month',darkMode:false,balanceHidden:false,recentCurrencies:['PKR','USD'],curDDOpen:false,
   accounts:[
     {id:'hbl_001',bankId:'hbl',bankName:'HBL',type:'Current',no:'****4521',balance:224800,color:'#00a651',abbr:'HBL',linked:'2024-10-15'},
     {id:'meezan_001',bankId:'meezan',bankName:'Meezan Bank',type:'Savings',no:'****7832',balance:98500,color:'#c8102e',abbr:'MB',linked:'2024-11-02'},
@@ -336,16 +346,19 @@ function renderHome(){
   el.innerHTML=`
   <div class="hero-section" style="margin-bottom:18px">
     <div class="hero-glow"></div>
-    <p style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:2px">${gr}, ${fn}</p>
-    <p style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Total Net Wealth</p>
-    <div style="display:inline-flex;align-items:center;gap:10px;margin-bottom:6px">
+    <p style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:14px">${gr}, ${fn}</p>
+    <div style="display:inline-flex;align-items:center;gap:10px;margin-bottom:2px">
       <p id="nw-display" style="font-size:40px;font-weight:800;letter-spacing:-.04em;color:var(--hero-num);transition:opacity .18s">${bal}</p>
+      <div class="cur-dd-wrapper" id="cur-dd-wrapper">
+        <button class="cur-dd-btn${S.curDDOpen?' open':''}" data-action="toggleCurDD">${S.displayCurrency}<svg class="dd-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+        ${S.curDDOpen?`<div class="cur-dropdown" id="cur-dropdown">${S.recentCurrencies.map(c=>`<button class="cur-dd-item${c===S.displayCurrency?' sel':''}" data-action="setCurFromDD" data-cur="${c}">${c}${c===S.displayCurrency?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>':''}</button>`).join('')}<div class="cur-dd-divider"></div><button class="cur-dd-item" data-action="openCurModal" style="color:var(--accent)">More <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button></div>`:''}
+      </div>
       <button style="width:30px;height:30px;border-radius:50%;background:var(--glass2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0" data-action="toggleBalance">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2" stroke-linecap="round">${eyePath}</svg>
       </button>
     </div>
+    <p style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Net Wealth</p>
     ${!S.balanceHidden?`<div style="display:flex;gap:16px;justify-content:center;margin-bottom:10px"><span style="font-size:12px;color:var(--text2)"><span style="color:var(--clr-up);font-weight:800">↑</span> Assets ${fmtPKR(assets)}</span>${debts>0?`<span style="font-size:12px;color:var(--text2)"><span style="color:var(--clr-down);font-weight:800">↓</span> Debts ${fmtPKR(debts)}</span>`:'<span style="font-size:12px;color:var(--accent)">Debt-free</span>'}</div>`:'<div style="margin-bottom:10px"></div>'}
-    <div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-bottom:10px">${CUR_LIST.map(c=>`<button class="cur-pill${c===S.displayCurrency?' active':''}" data-action="switchCur" data-cur="${c}">${c}</button>`).join('')}</div>
     <div style="display:flex;align-items:center;justify-content:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;animation:pulse 2s infinite"></span><span id="rate-ts" style="font-size:11px;color:var(--text3)">${secsAgo(S.ratesTs)}s ago</span></div>
   </div>
   ${sc?`<div class="card" style="padding:12px 14px;margin-bottom:18px;cursor:pointer;display:flex;align-items:center;gap:10px;border-color:rgba(16,185,129,.2)" data-action="openModal" data-modal="aiAdvisor"><div style="width:34px;height:34px;border-radius:10px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div style="flex:1;min-width:0"><p style="font-size:12px;font-weight:700;color:var(--accent)">AI Insight</p><p style="font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sc.text}</p></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>`:''}
@@ -535,6 +548,7 @@ function renderModal(){
     case 'txDetail':body.innerHTML=renderTxDetailModal();break;
     case 'profile':body.innerHTML=renderProfileModal();break;
     case 'aiAdvisor':body.innerHTML=renderAIAdvisorModal();break;
+    case 'curSelect':body.innerHTML=renderCurSelectModal();break;
     case 'markReturned':body.innerHTML=renderMarkReturnedModal();break;
     default:body.innerHTML='';
   }
@@ -563,6 +577,13 @@ function renderAIAdvisorModal(){
   return `<div style="padding-top:18px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px"><div><h2 style="font-size:18px;font-weight:800;color:var(--text1)">AI Advisor</h2><p style="font-size:12px;color:var(--text3)">Powered by MonoWallet AI</p></div><button class="btn-icon" data-action="closeModal"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   ${qs.map((qa)=>`<div style="margin-bottom:14px"><div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--glass2);border-radius:12px;border:1px solid var(--border2);cursor:pointer" onclick="const a=this.nextElementSibling;a.style.display=a.style.display==='none'?'block':'none'"><p style="font-size:13px;font-weight:700;color:var(--text1)">${qa.q}</p><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></div><div style="display:none;padding:12px 14px;background:var(--adim);border-radius:0 0 12px 12px;border:1px solid rgba(16,185,129,.2);border-top:none"><p style="font-size:13px;color:var(--text2);line-height:1.6">${qa.a}</p></div></div>`).join('')}
   <button class="btn btn-secondary" style="width:100%;margin-top:6px" data-action="closeModal">Close</button></div>`;
+}
+function renderCurSelectModal(){
+  const nw=trueNetWealth();
+  return `<div style="padding-top:18px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px"><h2 style="font-size:18px;font-weight:800;color:var(--text1)">Select Currency</h2><button class="btn-icon" data-action="closeModal"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <p style="font-size:13px;color:var(--text3);margin-bottom:14px">Your net wealth in each currency</p>
+  <div style="display:flex;flex-direction:column;gap:4px">${CUR_LIST.map(c=>{const isA=c===S.displayCurrency;return `<button class="cur-dd-item" style="padding:14px;border-radius:12px;${isA?'background:var(--adim)':''}" data-action="setCurrency" data-cur="${c}"><span><span style="font-size:14px;font-weight:800;${isA?'color:var(--accent)':''}">${c}</span><span style="font-size:11px;color:var(--text3);margin-left:5px;font-weight:500">${CUR_SYM[c]||''}</span></span><span style="font-size:14px;font-weight:700;${isA?'color:var(--accent)':''}">${fmtAmt(nw,c)}</span></button>`;}).join('')}</div>
+  <button class="btn btn-ghost" style="width:100%;margin-top:12px" data-action="closeModal">Cancel</button></div>`;
 }
 function renderMarkReturnedModal(){
   const d=S.debts.find(x=>x.id===S.modal.data.debtId);if(!d)return'';
@@ -603,6 +624,7 @@ function toast(msg,type,dur){type=type||'info';dur=dur||3200;const colors={info:
 function startRates(){setInterval(()=>{Object.keys(S.rates).forEach(c=>{if(c==='PKR')return;S.rates[c]=BASE_RATES[c]*(1+(Math.random()-.5)*0.01);});S.ratesTs=Date.now();if(S.activeTab==='home'){const d=document.getElementById('nw-display'),t=document.getElementById('rate-ts');if(d&&!S.balanceHidden)d.textContent=fmtAmt(trueNetWealth());if(t)t.textContent='just now';}},30000);setInterval(()=>{const t=document.getElementById('rate-ts');if(t&&S.activeTab==='home')t.textContent=secsAgo(S.ratesTs)+'s ago';},1000);}
 // EVENTS
 document.addEventListener('click',e=>{
+  if(S.curDDOpen&&!e.target.closest('#cur-dd-wrapper')){S.curDDOpen=false;if(S.activeTab==='home')renderHome();}
   const el=e.target.closest('[data-action]');if(!el)return;
   const{action,tab,cur,period,modal}=el.dataset;
   switch(action){
@@ -626,6 +648,10 @@ document.addEventListener('click',e=>{
       break;
     case 'toggleNotif': el.classList.toggle('on'); break;
     case 'notifBell': toast('No new notifications','info',2000); break;
+    case 'toggleCurDD':S.curDDOpen=!S.curDDOpen;if(S.activeTab==='home')renderHome();break;
+    case 'setCurFromDD':{const nc=el.dataset.cur;S.displayCurrency=nc;S.curDDOpen=false;if(!S.recentCurrencies.includes(nc)){S.recentCurrencies.unshift(nc);if(S.recentCurrencies.length>3)S.recentCurrencies.pop();}if(S.activeTab==='home')renderHome();break;}
+    case 'openCurModal':S.curDDOpen=false;openModal('curSelect');break;
+    case 'setCurrency':{const nc2=el.dataset.cur;S.displayCurrency=nc2;if(!S.recentCurrencies.includes(nc2)){S.recentCurrencies.unshift(nc2);if(S.recentCurrencies.length>3)S.recentCurrencies.pop();}closeModal();if(S.activeTab==='home')renderHome();break;}
     case 'signOut':
       closeModal();
       const si2=document.getElementById('signin'),app2=document.getElementById('app');
