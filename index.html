@@ -108,8 +108,8 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text1);dis
   <div class="si-logo"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg></div>
   <h1 style="font-size:27px;font-weight:800;letter-spacing:-.03em;margin-bottom:5px">MonoWallet</h1>
   <p style="font-size:13px;color:var(--text3);margin-bottom:28px">All your banks, one dashboard</p>
-  <p style="font-size:15px;font-weight:700;margin-bottom:3px">Welcome back, Farhan</p>
-  <p style="font-size:12px;color:var(--text3);margin-bottom:20px">farhannaz362@gmail.com</p>
+  <p style="font-size:15px;font-weight:700;margin-bottom:12px">Welcome to MonoWallet</p>
+  <input class="field" type="text" id="si-name" placeholder="Your full name" autocomplete="name" style="width:100%;margin-bottom:14px;text-align:center"/>
   <p style="font-size:13px;font-weight:600;margin-bottom:2px">Enter your 4-digit PIN</p>
   <p style="font-size:11px;color:var(--text3);margin-bottom:2px">Hint: <strong style="color:var(--accent)">1 2 3 4</strong></p>
   <div class="pin-row">
@@ -203,6 +203,7 @@ const S={
     {m:'Mar',inc:195000,exp:125000},{m:'Apr',inc:180000,exp:107000},{m:'May',inc:225000,exp:161700},
   ],
   modal:{active:null,step:1,data:{}},
+  userName:'',
   _id:3000,uid(){return 'x'+(this._id++);}
 };
 const netWealth=()=>S.accounts.reduce((s,a)=>s+a.balance,0);
@@ -287,9 +288,11 @@ function handleSIInput(el,idx){
   if(idx===3&&el.value){const all=[0,1,2,3].every(i=>{const e=document.querySelector(`[data-si-idx="${i}"]`);return e&&e.value;});if(all) setTimeout(verifySIPin,120);}
 }
 function verifySIPin(){
+  const nameVal=(document.getElementById('si-name')?.value||'').trim();
+  if(!nameVal){const err=document.getElementById('si-err');if(err){err.textContent='Please enter your name.';err.style.display='block';}setTimeout(()=>{if(err)err.style.display='none';document.getElementById('si-name')?.focus();},1500);return;}
   const pin=[0,1,2,3].map(i=>{const e=document.querySelector(`[data-si-idx="${i}"]`);return e?e.value:'';}).join('');
-  if(pin==='1234'){completeSignIn();}
-  else{document.querySelectorAll('[data-si-idx]').forEach(b=>{b.classList.add('err','shake');b.value='';});const err=document.getElementById('si-err');if(err)err.style.display='block';setTimeout(()=>{document.querySelectorAll('[data-si-idx]').forEach(b=>b.classList.remove('err','shake'));const f=document.querySelector('[data-si-idx="0"]');if(f)f.focus();},500);}
+  if(pin==='1234'){S.userName=nameVal;completeSignIn();}
+  else{document.querySelectorAll('[data-si-idx]').forEach(b=>{b.classList.add('err','shake');b.value='';});const err=document.getElementById('si-err');if(err){err.textContent='Incorrect PIN. Try again.';err.style.display='block';}setTimeout(()=>{document.querySelectorAll('[data-si-idx]').forEach(b=>b.classList.remove('err','shake'));const f=document.querySelector('[data-si-idx="0"]');if(f)f.focus();},500);}
 }
 function completeSignIn(){
   const si=document.getElementById('signin');si.style.animation='fadeOut .35s ease both';
@@ -311,7 +314,8 @@ function renderTab(name){if(name==='home')renderHome();if(name==='accounts')rend
 function renderHome(){
   const el=document.getElementById('tab-home'),nw=netWealth(),h=new Date().getHours();
   const gr=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
-  el.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px"><div><p style="font-size:12px;color:var(--text3);font-weight:500">${gr}</p><h1 style="font-size:24px;font-weight:800;letter-spacing:-.03em">Farhan Naz</h1></div><div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;cursor:pointer" data-action="openModal" data-modal="profile">F</div></div>
+  const uInit=(S.userName[0]||'?').toUpperCase();
+  el.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px"><div><p style="font-size:12px;color:var(--text3);font-weight:500">${gr}</p><h1 style="font-size:24px;font-weight:800;letter-spacing:-.03em">${S.userName}</h1></div><div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;cursor:pointer" data-action="openModal" data-modal="profile">${uInit}</div></div>
   <div class="wealth-card" style="margin-bottom:18px"><div style="position:absolute;top:-30px;right:-30px;width:160px;height:160px;background:radial-gradient(circle,rgba(16,185,129,.18),transparent 65%);pointer-events:none"></div>
     <p style="font-size:11px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px">Total Net Wealth</p>
     <p id="nw-display" style="font-size:38px;font-weight:800;letter-spacing:-.04em;color:#fff;line-height:1.1;margin-bottom:4px">${fmtAmt(nw)}</p>
@@ -475,7 +479,7 @@ function renderMore(){
     <h2 style="font-size:14px;font-weight:800;margin-bottom:16px">Settings</h2>
     <div style="display:flex;align-items:center;gap:14px;padding:12px;background:var(--glass);border-radius:12px;margin-bottom:14px;cursor:pointer" data-action="openModal" data-modal="profile">
       <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">F</div>
-      <div><p style="font-size:15px;font-weight:800">Farhan Naz</p><p style="font-size:12px;color:var(--text3)">farhannaz362@gmail.com</p></div>
+      <div><p style="font-size:15px;font-weight:800">${S.userName}</p><p style="font-size:12px;color:var(--text3)">${S.userName.toLowerCase().replace(/\s+/g,'')+'@email.com'}</p></div>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2" stroke-linecap="round" style="margin-left:auto"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
@@ -534,7 +538,7 @@ function renderTxDetailModal(){
 function renderProfileModal(){
   const assets=netWealth(),debts=S.debts.filter(d=>d.dir==='owe').reduce((s,d)=>s+(d.total-d.paid),0),nw=assets-debts;
   return `<div style="padding-top:18px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px"><h2 style="font-size:18px;font-weight:800">Profile</h2><button class="btn-icon" data-action="closeModal"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:20px"><div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff">F</div><div style="text-align:center"><p style="font-size:18px;font-weight:800">Farhan Naz</p><p style="font-size:12px;color:var(--text3)">farhannaz362@gmail.com</p><p style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:600">MonoWallet ID: FARHAN_NAZ_001</p></div></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:20px"><div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff">${(S.userName[0]||'?').toUpperCase()}</div><div style="text-align:center"><p style="font-size:18px;font-weight:800">${S.userName}</p><p style="font-size:12px;color:var(--text3)">${S.userName.toLowerCase().replace(/\s+/g,'')+'@email.com'}</p><p style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:600">MonoWallet ID: ${S.userName.toUpperCase().replace(/\s+/g,'_')}_001</p></div></div>
   <div class="card" style="padding:16px;margin-bottom:14px"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center"><div><p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Assets</p><p style="font-size:15px;font-weight:800;color:#4ade80">${fmtPKR(assets)}</p></div><div style="border-left:1px solid var(--border);border-right:1px solid var(--border)"><p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Debts</p><p style="font-size:15px;font-weight:800;color:#f87171">${fmtPKR(debts)}</p></div><div><p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Net Worth</p><p style="font-size:15px;font-weight:800;color:${nw>=0?'#4ade80':'#f87171'}">${fmtPKR(nw)}</p></div></div></div>
   <div class="card" style="padding:4px 0;margin-bottom:14px">${[{label:'Linked Banks',val:`${S.accounts.length} accounts`},{label:'Monthly Income',val:fmtPKR(S.monthlyIncome)},{label:'Member Since',val:'October 2024'}].map(r=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border)"><span style="font-size:13px;font-weight:600">${r.label}</span><span style="font-size:13px;color:var(--text2);font-weight:700">${r.val}</span></div>`).join('')}</div>
   <button class="btn btn-secondary" style="width:100%" data-action="closeModal">Close</button></div>`;
@@ -640,6 +644,7 @@ document.addEventListener('click',e=>{
       const si2=document.getElementById('signin'),app2=document.getElementById('app');
       app2.style.display='none';si2.style.display='flex';si2.style.animation='fadeIn .4s ease both';
       [0,1,2,3].forEach(i=>{const e=document.querySelector(`[data-si-idx="${i}"]`);if(e){e.value='';e.classList.remove('filled');}});
+      const siName=document.getElementById('si-name');if(siName)siName.value='';
       document.getElementById('si-err').style.display='none';
       setTimeout(()=>{const f=document.querySelector('[data-si-idx="0"]');if(f)f.focus();},100);
       break;
