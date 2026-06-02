@@ -207,6 +207,8 @@ const S={
   _id:3000,uid(){return 'x'+(this._id++);}
 };
 const netWealth=()=>S.accounts.reduce((s,a)=>s+a.balance,0);
+const totalDebts=()=>S.debts.filter(d=>d.dir==='owe').reduce((s,d)=>s+(d.total-d.paid),0);
+const trueNetWealth=()=>netWealth()-totalDebts();
 const getAcc=id=>S.accounts.find(a=>a.id===id);
 function fmtNum(n){return Math.round(Math.abs(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g,',');}
 function fmtAmt(pkr,cur){
@@ -312,14 +314,14 @@ function renderBottomNav(){
 function renderTab(name){if(name==='home')renderHome();if(name==='accounts')renderAccounts();if(name==='spending')renderSpending();if(name==='more')renderMore();}
 // HOME
 function renderHome(){
-  const el=document.getElementById('tab-home'),nw=netWealth(),h=new Date().getHours();
+  const el=document.getElementById('tab-home'),nw=trueNetWealth(),assets=netWealth(),debts=totalDebts(),h=new Date().getHours();
   const gr=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
   const uInit=(S.userName[0]||'?').toUpperCase();
   el.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px"><div><p style="font-size:12px;color:var(--text3);font-weight:500">${gr}</p><h1 style="font-size:24px;font-weight:800;letter-spacing:-.03em">${S.userName}</h1></div><div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;cursor:pointer" data-action="openModal" data-modal="profile">${uInit}</div></div>
   <div class="wealth-card" style="margin-bottom:18px"><div style="position:absolute;top:-30px;right:-30px;width:160px;height:160px;background:radial-gradient(circle,rgba(16,185,129,.18),transparent 65%);pointer-events:none"></div>
     <p style="font-size:11px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px">Total Net Wealth</p>
-    <p id="nw-display" style="font-size:38px;font-weight:800;letter-spacing:-.04em;color:#fff;line-height:1.1;margin-bottom:4px">${fmtAmt(nw)}</p>
-    <p style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:14px">Across ${S.accounts.length} linked account${S.accounts.length!==1?'s':''}</p>
+    <p id="nw-display" style="font-size:38px;font-weight:800;letter-spacing:-.04em;color:#fff;line-height:1.1;margin-bottom:6px">${fmtAmt(nw)}</p>
+    <div style="display:flex;gap:12px;margin-bottom:14px"><span style="font-size:11px;color:rgba(255,255,255,.5)"><span style="color:#4ade80;font-weight:700">↑</span> Assets ${fmtPKR(assets)}</span>${debts>0?`<span style="font-size:11px;color:rgba(255,255,255,.5)"><span style="color:#f87171;font-weight:700">↓</span> Debts ${fmtPKR(debts)}</span>`:'<span style="font-size:11px;color:rgba(255,255,255,.5)">Debt-free</span>'}<span style="font-size:11px;color:rgba(255,255,255,.4)">${S.accounts.length} account${S.accounts.length!==1?'s':''}</span></div>
     <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">${CUR_LIST.map(c=>`<button class="cur-pill${c===S.displayCurrency?' active':''}" data-action="switchCur" data-cur="${c}">${c}</button>`).join('')}</div>
     <div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block;animation:pulse 2s infinite"></span><span style="font-size:11px;color:rgba(255,255,255,.5)">Live rates</span></div><span id="rate-ts" style="font-size:11px;color:rgba(255,255,255,.4)">${secsAgo(S.ratesTs)}s ago</span></div>
   </div>
@@ -616,7 +618,7 @@ function handleDigitInput(el,attr,idx,total,cb){el.value=el.value.replace(/\D/g,
 // EFFECTS
 function launchConfetti(){const cv=document.getElementById('confetti-canvas');cv.width=window.innerWidth;cv.height=window.innerHeight;cv.style.display='block';const ctx=cv.getContext('2d'),COLS=['#10b981','#22c55e','#f59e0b','#ec4899','#3b82f6','#a78bfa'];const pts=Array.from({length:100},()=>({x:Math.random()*cv.width,y:-10,vx:(Math.random()-.5)*4,vy:Math.random()*2.5+1.5,col:COLS[Math.floor(Math.random()*COLS.length)],w:Math.random()*9+4,h:Math.random()*5+3,rot:Math.random()*360,rs:(Math.random()-.5)*6,alpha:1}));let fr=0;const tick=()=>{if(fr>150){cv.style.display='none';ctx.clearRect(0,0,cv.width,cv.height);return;}ctx.clearRect(0,0,cv.width,cv.height);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.07;p.rot+=p.rs;if(fr>100)p.alpha=Math.max(0,p.alpha-.035);ctx.save();ctx.globalAlpha=p.alpha;ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);ctx.fillStyle=p.col;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});fr++;requestAnimationFrame(tick);};requestAnimationFrame(tick);}
 function toast(msg,type,dur){type=type||'info';dur=dur||3200;const colors={info:'var(--text2)',success:'#4ade80',error:'#f87171',warning:'#fcd34d'};const svgs={success:'<polyline points="20 6 9 17 4 12"/>',error:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',warning:'<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>',info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>'};const el=document.createElement('div');el.className='toast';el.style.borderLeftColor=colors[type]||colors.info;el.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${colors[type]||colors.info}" stroke-width="2.5" stroke-linecap="round">${svgs[type]||svgs.info}</svg><span style="color:var(--text1)">${msg}</span>`;const ctr=document.getElementById('toast-ctr');if(ctr.children.length>=3)ctr.removeChild(ctr.firstChild);ctr.appendChild(el);setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),280);},dur);}
-function startRates(){setInterval(()=>{Object.keys(S.rates).forEach(c=>{if(c==='PKR')return;S.rates[c]=BASE_RATES[c]*(1+(Math.random()-.5)*0.01);});S.ratesTs=Date.now();if(S.activeTab==='home'){const d=document.getElementById('nw-display'),t=document.getElementById('rate-ts');if(d)d.textContent=fmtAmt(netWealth());if(t)t.textContent='just now';}},30000);setInterval(()=>{const t=document.getElementById('rate-ts');if(t&&S.activeTab==='home')t.textContent=secsAgo(S.ratesTs)+'s ago';},1000);}
+function startRates(){setInterval(()=>{Object.keys(S.rates).forEach(c=>{if(c==='PKR')return;S.rates[c]=BASE_RATES[c]*(1+(Math.random()-.5)*0.01);});S.ratesTs=Date.now();if(S.activeTab==='home'){const d=document.getElementById('nw-display'),t=document.getElementById('rate-ts');if(d)d.textContent=fmtAmt(trueNetWealth());if(t)t.textContent='just now';}},30000);setInterval(()=>{const t=document.getElementById('rate-ts');if(t&&S.activeTab==='home')t.textContent=secsAgo(S.ratesTs)+'s ago';},1000);}
 // EVENTS
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-action]');if(!el)return;
@@ -631,7 +633,7 @@ document.addEventListener('click',e=>{
       S.displayCurrency=cur;
       document.querySelectorAll('.cur-pill').forEach(p=>p.classList.toggle('active',p.dataset.cur===cur));
       const nwEl=document.getElementById('nw-display');
-      if(nwEl){nwEl.style.opacity='0.4';setTimeout(()=>{nwEl.textContent=fmtAmt(netWealth());nwEl.style.opacity='1';},180);}
+      if(nwEl){nwEl.style.opacity='0.4';setTimeout(()=>{nwEl.textContent=fmtAmt(trueNetWealth());nwEl.style.opacity='1';},180);}
       break;
     case 'toggleTheme':
       S.darkMode=!S.darkMode;
