@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"/>
@@ -9,12 +9,13 @@
 <meta name="apple-mobile-web-app-title" content="MonoWallet"/>
 <meta name="theme-color" content="#059669"/>
 <link id="ati" rel="apple-touch-icon" sizes="180x180" href=""/>
+<script>(function(){const m=window.matchMedia('(prefers-color-scheme: dark)');document.documentElement.dataset.theme=m.matches?'dark':'light';document.documentElement.dataset.themeMode='system';}());</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#07090f;--bg2:#0d1117;--bg3:#131a24;--glass:rgba(255,255,255,.06);--glass2:rgba(255,255,255,.1);--glass3:rgba(255,255,255,.18);--border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.16);--accent:#10b981;--accent2:#059669;--adim:rgba(16,185,129,.15);--aglow:rgba(16,185,129,.32);--red:#ef4444;--amber:#f59e0b;--text1:#f1f5f9;--text2:#94a3b8;--text3:#4b5e75;--hero-num:#ffffff;--hero-sub:rgba(255,255,255,.6);--hero-dim:rgba(255,255,255,.35);--clr-up:#4ade80;--clr-down:#f87171;--clr-owe:#fca5a5;--clr-lent:#86efac;--lqg:rgba(255,255,255,.055);--lqg-border:rgba(255,255,255,.11);--card-shadow:0 8px 32px rgba(0,0,0,.32);--ftb-bg:rgba(8,13,20,.74);--pill-bg:rgba(255,255,255,.16);--pill-border:rgba(255,255,255,.26)}
-[data-theme="light"]{--bg:#edfaf4;--bg2:#e0f5ec;--bg3:#ffffff;--glass:rgba(255,255,255,.52);--glass2:rgba(255,255,255,.72);--glass3:rgba(255,255,255,.92);--border:rgba(16,185,129,.1);--border2:rgba(16,185,129,.22);--text1:#0f172a;--text2:#334155;--text3:#64748b;--hero-num:#0f172a;--hero-sub:#334155;--hero-dim:#64748b;--clr-up:#16a34a;--clr-down:#dc2626;--clr-owe:#dc2626;--clr-lent:#16a34a;--lqg:rgba(255,255,255,.58);--lqg-border:rgba(255,255,255,.88);--card-shadow:0 8px 32px rgba(0,0,0,.07);--ftb-bg:rgba(222,244,234,.78);--pill-bg:rgba(255,255,255,.9);--pill-border:rgba(255,255,255,.98)}
+:root{--bg:#07090f;--bg2:#0d1117;--bg3:#131a24;--glass:rgba(255,255,255,.06);--glass2:rgba(255,255,255,.1);--glass3:rgba(255,255,255,.18);--border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.16);--accent:#10b981;--accent2:#059669;--adim:rgba(16,185,129,.15);--aglow:rgba(16,185,129,.32);--red:#ef4444;--amber:#f59e0b;--text1:#f1f5f9;--text2:#94a3b8;--text3:#4b5e75;--hero-num:#ffffff;--hero-sub:rgba(255,255,255,.6);--hero-dim:rgba(255,255,255,.35);--clr-up:#4ade80;--clr-down:#f87171;--clr-owe:#fca5a5;--clr-lent:#86efac;--lqg:rgba(255,255,255,.055);--lqg-border:rgba(255,255,255,.11);--card-shadow:0 8px 32px rgba(0,0,0,.32);--ftb-bg:rgba(10,16,26,.5);--pill-bg:rgba(255,255,255,.18);--pill-border:rgba(255,255,255,.24)}
+[data-theme="light"]{--bg:#edfaf4;--bg2:#e0f5ec;--bg3:#ffffff;--glass:rgba(255,255,255,.52);--glass2:rgba(255,255,255,.72);--glass3:rgba(255,255,255,.92);--border:rgba(16,185,129,.1);--border2:rgba(16,185,129,.22);--text1:#0f172a;--text2:#334155;--text3:#64748b;--hero-num:#0f172a;--hero-sub:#334155;--hero-dim:#64748b;--clr-up:#16a34a;--clr-down:#dc2626;--clr-owe:#dc2626;--clr-lent:#16a34a;--lqg:rgba(255,255,255,.58);--lqg-border:rgba(255,255,255,.88);--card-shadow:0 8px 32px rgba(0,0,0,.07);--ftb-bg:rgba(255,255,255,.26);--pill-bg:rgba(255,255,255,.86);--pill-border:rgba(255,255,255,.96)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:var(--bg);overflow:hidden}
 body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text1);display:flex;justify-content:center;align-items:center}
@@ -37,24 +38,26 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text1);dis
 .hdr-search span{font-size:13px;color:var(--text3);font-weight:500}
 .hdr-icon-btn{width:36px;height:36px;border-radius:50%;background:var(--glass2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;flex-shrink:0;transition:all .15s}
 .hdr-icon-btn:hover{background:var(--glass3);border-color:var(--accent)}
-.theme-sun{display:flex}
-.theme-moon{display:none}
-[data-theme="light"] .theme-sun{display:none}
-[data-theme="light"] .theme-moon{display:flex}
+.theme-sun,.theme-moon,.theme-auto{display:none}
+[data-theme-mode="light"] .theme-sun{display:flex}
+[data-theme-mode="dark"] .theme-moon{display:flex}
+[data-theme-mode="system"] .theme-auto{display:flex}
 .tab-panel{display:none;flex-direction:column;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 16px 112px}
 .tab-panel.active{display:flex;animation:slideUp .22s ease both}
 /* ── Floating Tab Bar ────────────────────────────────────────────────────── */
 #bottom-nav{flex-shrink:0;height:calc(90px + env(safe-area-inset-bottom,0px));background:transparent;border:none;position:relative}
-.ftb{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);display:flex;align-items:center;padding:0 6px;border-radius:100px;gap:0;background:var(--ftb-bg);backdrop-filter:blur(48px) saturate(200%);-webkit-backdrop-filter:blur(48px) saturate(200%);border:1px solid rgba(255,255,255,.15);box-shadow:0 10px 44px rgba(0,0,0,.42),0 2px 10px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.14);z-index:200;width:min(92vw,440px);height:58px;overflow:visible;touch-action:none;user-select:none}
-.nav-pill-bg{position:absolute;left:0;top:50%;width:70px;height:70px;margin-top:-35px;border-radius:50%;background:var(--pill-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--pill-border);box-shadow:0 4px 24px rgba(0,0,0,.22),0 6px 28px rgba(16,185,129,.18),inset 0 1px 0 rgba(255,255,255,.6);transition:left .4s cubic-bezier(.34,1.3,.64,1);will-change:left,transform;pointer-events:none;z-index:0}
-.ftb.dragging .nav-pill-bg{box-shadow:0 10px 44px rgba(0,0,0,.34),0 14px 52px rgba(16,185,129,.32),inset 0 1px 0 rgba(255,255,255,.72);transform:scale(1.1) translateY(-4px);transition:transform .12s cubic-bezier(.34,1.5,.64,1)}
-.nav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:1;height:100%;cursor:pointer;color:var(--text3);font-size:10px;font-weight:700;letter-spacing:.04em;background:none;border:none;font-family:inherit;transition:color .2s;position:relative;z-index:1;white-space:nowrap;-webkit-tap-highlight-color:transparent;touch-action:none}
+.ftb{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);display:flex;align-items:center;padding:0 6px;border-radius:100px;gap:0;background:var(--ftb-bg);backdrop-filter:blur(60px) saturate(180%);-webkit-backdrop-filter:blur(60px) saturate(180%);border:1px solid rgba(255,255,255,.2);box-shadow:0 8px 32px rgba(0,0,0,.28),0 2px 8px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.18);z-index:200;width:min(92vw,440px);height:58px;overflow:visible;touch-action:none;user-select:none}
+[data-theme="light"] .ftb{border-color:rgba(255,255,255,.55);box-shadow:0 8px 32px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.07),inset 0 1px 0 rgba(255,255,255,.7)}
+.nav-pill-bg{position:absolute;left:0;top:50%;width:70px;height:70px;margin-top:-35px;border-radius:50%;background:var(--pill-bg);backdrop-filter:blur(28px) saturate(160%);-webkit-backdrop-filter:blur(28px) saturate(160%);border:1px solid var(--pill-border);box-shadow:0 4px 20px rgba(0,0,0,.2),0 6px 24px rgba(16,185,129,.15),inset 0 1px 0 rgba(255,255,255,.65);transition:left .42s cubic-bezier(.34,1.3,.64,1);will-change:left,transform;pointer-events:none;z-index:0}
+[data-theme="light"] .nav-pill-bg{box-shadow:0 4px 20px rgba(0,0,0,.1),0 6px 24px rgba(16,185,129,.12),inset 0 1px 0 rgba(255,255,255,.9)}
+.ftb.dragging .nav-pill-bg{box-shadow:0 10px 44px rgba(0,0,0,.3),0 14px 52px rgba(16,185,129,.28),inset 0 1px 0 rgba(255,255,255,.72);transform:scale(1.1) translateY(-4px);transition:transform .14s cubic-bezier(.34,1.5,.64,1)}
+.nav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:1;height:100%;cursor:pointer;color:var(--text3);font-size:10px;font-weight:700;letter-spacing:.04em;background:none;border:none;font-family:inherit;transition:color .2s,transform .14s cubic-bezier(.34,1.5,.64,1);position:relative;z-index:1;white-space:nowrap;-webkit-tap-highlight-color:transparent;touch-action:none}
 .nav-btn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .32s cubic-bezier(.34,1.5,.64,1)}
 .nav-btn.active{color:var(--accent)}
 .nav-btn.active svg{animation:navPop .36s cubic-bezier(.34,1.5,.64,1) both}
 .nav-btn.drag-hover{color:var(--accent)}
 .nav-btn.drag-hover svg{transform:scale(1.18)}
-.nav-btn:active>*{transform:scale(.88);transition:transform .08s}
+.nav-btn:active{transform:scale(.93);transition:transform .08s}
 @keyframes navPop{0%{transform:scale(.8)}55%{transform:scale(1.18)}100%{transform:scale(1)}}
 /* ── Cards & glass surfaces ──────────────────────────────────────────────── */
 .card{background:var(--lqg);backdrop-filter:blur(28px) saturate(160%);-webkit-backdrop-filter:blur(28px) saturate(160%);border:1px solid var(--lqg-border);border-radius:18px;box-shadow:var(--card-shadow),inset 0 1px 0 rgba(255,255,255,.09)}
@@ -250,7 +253,7 @@ const RECURRING_KW=['netflix','spotify','youtube premium','amazon prime','hbo','
 const CAT_COLORS={Income:'#22c55e',Groceries:'#f97316',Transport:'#06b6d4',Utilities:'#f59e0b',Entertainment:'#ec4899',Dining:'#a78bfa',Health:'#22d3ee',Shopping:'#fb7185',Housing:'#6366f1',Transfer:'#94a3b8',Other:'#64748b'};
 const S={
   activeTab:'home',displayCurrency:'PKR',rates:{...BASE_RATES},ratesTs:Date.now(),
-  statementPeriod:'month',darkMode:false,balanceHidden:false,recentCurrencies:['PKR','USD'],curDDOpen:false,
+  statementPeriod:'month',themeMode:'system',balanceHidden:false,recentCurrencies:['PKR','USD'],curDDOpen:false,
   accounts:[
     {id:'hbl_001',bankId:'hbl',bankName:'HBL',type:'Current',no:'****4521',balance:224800,color:'#00a651',abbr:'HBL',linked:'2024-10-15'},
     {id:'meezan_001',bankId:'meezan',bankName:'Meezan Bank',type:'Savings',no:'****7832',balance:98500,color:'#c8102e',abbr:'MB',linked:'2024-11-02'},
@@ -307,6 +310,13 @@ const netWealth=()=>S.accounts.reduce((s,a)=>s+a.balance,0)+cryptoWealth();
 const totalDebts=()=>S.debts.filter(d=>d.dir==='owe').reduce((s,d)=>s+(d.total-d.paid),0);
 const trueNetWealth=()=>netWealth()-totalDebts();
 const getAcc=id=>S.accounts.find(a=>a.id===id);
+function applyTheme(){
+  const mode=S.themeMode||'system';
+  const isDark=mode==='system'?window.matchMedia('(prefers-color-scheme: dark)').matches:mode==='dark';
+  document.documentElement.dataset.theme=isDark?'dark':'light';
+  document.documentElement.dataset.themeMode=mode;
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if((S.themeMode||'system')==='system')applyTheme();});
 function fmtNum(n){return Math.round(Math.abs(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g,',');}
 function fmtAmt(pkr,cur){cur=cur||S.displayCurrency;const val=pkr*(S.rates[cur]||BASE_RATES[cur]||1);if(cur==='PKR')return'Rs '+fmtNum(val);return(CUR_SYM[cur]||'Rs ')+Math.abs(val).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
 function fmtPKR(n){return'Rs '+fmtNum(n);}
@@ -446,6 +456,7 @@ function renderHeader(){
     <button class="hdr-icon-btn" data-action="toggleTheme" title="Toggle theme" style="flex-shrink:0">
       <span class="theme-sun"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></span>
       <span class="theme-moon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2.5" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></span>
+      <span class="theme-auto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>
     </button>
     <button class="hdr-icon-btn" data-action="notifBell" style="flex-shrink:0">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2.5" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
@@ -791,7 +802,7 @@ function renderProfileModal(){
   <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:18px"><div style="width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff">${(S.userName[0]||'?').toUpperCase()}</div><div style="text-align:center"><p style="font-size:17px;font-weight:800;color:var(--text1)">${S.userName}</p><p style="font-size:12px;color:var(--text3)">${S.userName.toLowerCase().replace(/\s+/g,'')+'@email.com'}</p><p style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:600">ID: ${S.userName.toUpperCase().replace(/\s+/g,'_')}_001</p></div></div>
   <div class="card" style="padding:14px;margin-bottom:14px"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center"><div><p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Assets</p><p style="font-size:14px;font-weight:800;color:var(--clr-up)">${fmtPKR(assets)}</p></div><div style="border-left:1px solid var(--border);border-right:1px solid var(--border)"><p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Debts</p><p style="font-size:14px;font-weight:800;color:var(--clr-down)">${fmtPKR(debts2)}</p></div><div><p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Net Worth</p><p style="font-size:14px;font-weight:800;color:${nw>=0?'var(--clr-up)':'var(--clr-down)'}">${fmtPKR(nw)}</p></div></div></div>
   <div class="card" style="padding:0 14px;margin-bottom:14px">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2" stroke-linecap="round">${sunSVG}</svg><div><p style="font-size:13px;font-weight:600;color:var(--text1)">Appearance</p><p style="font-size:11px;color:var(--text3)">${S.darkMode?'Dark':'Light'} mode</p></div></div><button class="toggle${S.darkMode?' on':''}" data-action="toggleTheme"></button></div>
+    <div style="padding:13px 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2" stroke-linecap="round">${sunSVG}</svg><div><p style="font-size:13px;font-weight:600;color:var(--text1)">Appearance</p><p style="font-size:11px;color:var(--text3)">${S.themeMode==='system'?'Matches system':'Forced '+(S.themeMode==='dark'?'dark':'light')+' mode'}</p></div></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">${[{mode:'system',label:'Auto',icon:'<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>'},{mode:'light',label:'Light',icon:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'},{mode:'dark',label:'Dark',icon:'<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>'}].map(opt=>`<button data-action="setThemeMode" data-mode="${opt.mode}" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px;border-radius:12px;border:1.5px solid ${S.themeMode===opt.mode?'var(--accent)':'var(--border2)'};background:${S.themeMode===opt.mode?'var(--adim)':'var(--glass2)'};color:${S.themeMode===opt.mode?'var(--accent)':'var(--text2)'};font-family:inherit;cursor:pointer;font-size:11px;font-weight:700;transition:all .15s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${opt.icon}</svg>${opt.label}</button>`).join('')}</div></div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F0B90B" stroke-width="2" stroke-linecap="round">${btcSVG}</svg><div><p style="font-size:13px;font-weight:600;color:var(--text1)">Include Crypto</p><p style="font-size:11px;color:var(--text3)">In net wealth &amp; budgeting</p></div></div><button class="toggle${S.includeCrypto?' on':''}" data-action="toggleIncludeCrypto"></button></div>
     <div style="padding:13px 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg><p style="font-size:13px;font-weight:600;color:var(--text1)">Monthly Income</p></div><div style="display:flex;gap:8px"><input class="field" type="number" id="inc-field" value="${S.monthlyIncome}" placeholder="Monthly income"/><button class="btn btn-secondary btn-sm" data-action="saveIncome">Save</button></div></div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0"><div style="display:flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><p style="font-size:13px;font-weight:600;color:var(--text1)">Notifications</p></div><button class="toggle on" data-action="toggleNotif"></button></div>
@@ -903,9 +914,13 @@ document.addEventListener('click',e=>{
       if(nwEl&&!S.balanceHidden){nwEl.style.opacity='0.4';setTimeout(()=>{nwEl.textContent=fmtAmt(trueNetWealth());nwEl.style.opacity='1';},180);}
       break;
     case 'toggleTheme':
-      S.darkMode=!S.darkMode;
-      document.documentElement.dataset.theme=S.darkMode?'dark':'light';
-      document.querySelectorAll('[data-action="toggleTheme"].toggle').forEach(t=>t.classList.toggle('on',S.darkMode));
+      S.themeMode=S.themeMode==='system'?'light':S.themeMode==='light'?'dark':'system';
+      applyTheme();
+      if(S.activeTab==='more')renderMore();
+      break;
+    case 'setThemeMode':
+      S.themeMode=el.dataset.mode;
+      applyTheme();
       if(S.activeTab==='more')renderMore();
       break;
     case 'toggleNotif': el.classList.toggle('on'); break;
@@ -973,7 +988,7 @@ document.addEventListener('keydown',e=>{
   else if(prefix==='otp'&&!t.value&&idx>0){const p=document.querySelector(`[data-otp-idx="${idx-1}"]`);if(p){p.focus();p.value='';p.classList.remove('filled');}}
 });
 document.addEventListener('change',e=>{const t=e.target;if(t.id==='c1'||t.id==='c2'){S.modal.data[t.id]=t.checked;updateConsentBtn();}});
-function init(){generateAppIcon();setTimeout(()=>{const f=document.getElementById('si-username');if(f)f.focus();},100);}
+function init(){generateAppIcon();applyTheme();setTimeout(()=>{const f=document.getElementById('si-username');if(f)f.focus();},100);}
 document.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
