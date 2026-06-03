@@ -47,10 +47,10 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text1);dis
 /* ── Floating Tab Bar ────────────────────────────────────────────────────── */
 #bottom-nav{flex-shrink:0;height:calc(90px + env(safe-area-inset-bottom,0px));background:transparent;border:none;position:relative}
 .ftb{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);display:flex;align-items:center;padding:0 6px;border-radius:100px;gap:0;background:var(--ftb-bg);backdrop-filter:blur(60px) saturate(180%);-webkit-backdrop-filter:blur(60px) saturate(180%);border:1px solid rgba(255,255,255,.2);box-shadow:0 8px 32px rgba(0,0,0,.28),0 2px 8px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.18);z-index:200;width:min(92vw,440px);height:58px;overflow:visible;touch-action:none;user-select:none}
-[data-theme="light"] .ftb{border-color:rgba(255,255,255,.55);box-shadow:0 8px 32px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.07),inset 0 1px 0 rgba(255,255,255,.7)}
-.nav-pill-bg{position:absolute;left:0;top:50%;width:70px;height:70px;margin-top:-35px;border-radius:50%;background:var(--pill-bg);backdrop-filter:blur(28px) saturate(160%);-webkit-backdrop-filter:blur(28px) saturate(160%);border:1px solid var(--pill-border);box-shadow:0 4px 20px rgba(0,0,0,.2),0 6px 24px rgba(16,185,129,.15),inset 0 1px 0 rgba(255,255,255,.65);transition:left .42s cubic-bezier(.34,1.3,.64,1);will-change:left,transform;pointer-events:none;z-index:0}
-[data-theme="light"] .nav-pill-bg{box-shadow:0 4px 20px rgba(0,0,0,.1),0 6px 24px rgba(16,185,129,.12),inset 0 1px 0 rgba(255,255,255,.9)}
-.ftb.dragging .nav-pill-bg{box-shadow:0 10px 44px rgba(0,0,0,.3),0 14px 52px rgba(16,185,129,.28),inset 0 1px 0 rgba(255,255,255,.72);transform:scale(1.1) translateY(-4px);transition:transform .14s cubic-bezier(.34,1.5,.64,1)}
+[data-theme="light"] .ftb{border-color:rgba(255,255,255,.62);box-shadow:0 8px 28px rgba(0,0,0,.1),0 2px 8px rgba(0,0,0,.05),inset 0 1px 0 rgba(255,255,255,.82)}
+.nav-pill-bg{position:absolute;top:5px;left:0;height:calc(100% - 10px);width:80px;border-radius:100px;background:radial-gradient(ellipse 58% 72% at 38% 26%,rgba(255,255,255,.42) 0%,transparent 64%),var(--pill-bg);backdrop-filter:blur(24px) saturate(200%) brightness(108%);-webkit-backdrop-filter:blur(24px) saturate(200%) brightness(108%);border:1px solid var(--pill-border);box-shadow:inset 0 1px 0 rgba(255,255,255,.72),inset 1px 0 0 rgba(255,255,255,.22),inset -1px 0 0 rgba(255,255,255,.14),inset 0 -1px 0 rgba(0,0,0,.1),0 4px 20px rgba(0,0,0,.18),0 2px 10px rgba(16,185,129,.1);filter:url(#lns);transition:left .45s cubic-bezier(.34,1.3,.64,1),width .45s cubic-bezier(.34,1.3,.64,1),transform .3s cubic-bezier(.34,1.5,.64,1);will-change:left,width,transform;pointer-events:none;z-index:0;transform-origin:center center}
+[data-theme="light"] .nav-pill-bg{background:radial-gradient(ellipse 58% 72% at 38% 26%,rgba(255,255,255,.68) 0%,transparent 64%),var(--pill-bg);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 1px 0 0 rgba(255,255,255,.5),inset -1px 0 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.08),0 2px 8px rgba(16,185,129,.08)}
+.ftb.dragging .nav-pill-bg{filter:url(#lns-drag);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 1px 0 0 rgba(255,255,255,.3),inset -1px 0 0 rgba(255,255,255,.2),inset 0 -1px 0 rgba(0,0,0,.12),0 8px 32px rgba(0,0,0,.26),0 4px 20px rgba(16,185,129,.22);transition:filter .16s,box-shadow .16s}
 .nav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:1;height:100%;cursor:pointer;color:var(--text3);font-size:10px;font-weight:700;letter-spacing:.04em;background:none;border:none;font-family:inherit;transition:color .2s,transform .14s cubic-bezier(.34,1.5,.64,1);position:relative;z-index:1;white-space:nowrap;-webkit-tap-highlight-color:transparent;touch-action:none}
 .nav-btn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .32s cubic-bezier(.34,1.5,.64,1)}
 .nav-btn.active{color:var(--accent)}
@@ -462,7 +462,32 @@ function renderHeader(){
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2.5" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
     </button>`;
 }
-// NAV
+// NAV — spring physics version counter (cancels superseded RAF loops)
+let _spV=0;
+function springSnap(pill,toL,toW,initVelX){
+  const ver=++_spV;
+  const K=195,B=25;
+  let L=parseFloat(pill.style.left)||0;
+  let W=parseFloat(pill.style.width)||toW;
+  const mSX=pill.style.transform.match(/scaleX\(([\d.]+)\)/);
+  let SX=mSX?parseFloat(mSX[1]):1;
+  let vL=initVelX||0,vW=0,vSX=0;
+  let last=performance.now();
+  pill.style.transition='none';
+  (function step(now){
+    if(_spV!==ver)return;
+    const dt=Math.min((now-last)/1000,.02);last=now;
+    vL+=(-K*(L-toL)-B*vL)*dt; L+=vL*dt;
+    vW+=(-K*(W-toW)-B*vW)*dt; W+=vW*dt;
+    vSX+=(-K*(SX-1)-B*vSX)*dt; SX+=vSX*dt;
+    pill.style.left=L+'px';
+    pill.style.width=W+'px';
+    pill.style.transform=`scaleX(${SX})`;
+    const done=Math.abs(L-toL)<.4&&Math.abs(vL)<2&&Math.abs(W-toW)<.4&&Math.abs(vW)<2&&Math.abs(SX-1)<.003&&Math.abs(vSX)<.03;
+    if(done){pill.style.left=toL+'px';pill.style.width=toW+'px';pill.style.transform='scaleX(1)';pill.style.transition='';}
+    else requestAnimationFrame(step);
+  })(performance.now());
+}
 function switchTab(name){
   S.activeTab=name;
   document.querySelectorAll('.tab-panel').forEach(el=>el.classList.toggle('active',el.id==='tab-'+name));
@@ -486,15 +511,15 @@ function updateNavPill(animate){
   if(!ftb||!pill)return;
   const active=ftb.querySelector('.nav-btn.active');
   if(!active)return;
-  const cx=active.offsetLeft+active.offsetWidth/2;
-  const left=cx-35;
+  const toL=active.offsetLeft,toW=active.offsetWidth;
+  _spV++; // cancel any running spring
   if(!animate){
     pill.style.transition='none';
-    pill.style.left=left+'px';
+    pill.style.left=toL+'px';pill.style.width=toW+'px';pill.style.transform='scaleX(1)';
     requestAnimationFrame(()=>{if(pill)pill.style.transition='';});
   }else{
-    pill.style.transition='left .4s cubic-bezier(.34,1.3,.64,1)';
-    pill.style.left=left+'px';
+    pill.style.transition='left .45s cubic-bezier(.34,1.3,.64,1),width .45s cubic-bezier(.34,1.3,.64,1),transform .3s cubic-bezier(.34,1.5,.64,1)';
+    pill.style.left=toL+'px';pill.style.width=toW+'px';pill.style.transform='scaleX(1)';
   }
 }
 function initNavDrag(){
@@ -502,59 +527,77 @@ function initNavDrag(){
   const pill=document.getElementById('nav-pill-bg');
   if(!ftb||!pill)return;
   const btns=Array.from(ftb.querySelectorAll('.nav-btn'));
-  let dragging=false,startX=0,startY=0,capId=null;
-  function getNearestIdx(localX){
-    let best=0,bestD=Infinity;
-    btns.forEach((b,i)=>{const cx=b.offsetLeft+b.offsetWidth/2;const d=Math.abs(localX-cx);if(d<bestD){bestD=d;best=i;}});
+  let dragging=false,startX=0,startY=0,prevX=0,prevT=0,velX=0;
+  function nearestIdx(lx){
+    let best=0,bd=Infinity;
+    btns.forEach((b,i)=>{const cx=b.offsetLeft+b.offsetWidth/2;const d=Math.abs(lx-cx);if(d<bd){bd=d;best=i;}});
     return best;
   }
-  function setPillX(localX,spring){
-    const firstCx=btns[0].offsetLeft+btns[0].offsetWidth/2;
-    const lastCx=btns[btns.length-1].offsetLeft+btns[btns.length-1].offsetWidth/2;
-    const clamped=Math.max(firstCx,Math.min(lastCx,localX));
-    pill.style.transition=spring?'left .35s cubic-bezier(.34,1.3,.64,1)':'none';
-    pill.style.left=(clamped-35)+'px';
+  function widthAtX(lx){
+    for(let i=0;i<btns.length-1;i++){
+      const lcx=btns[i].offsetLeft+btns[i].offsetWidth/2;
+      const rcx=btns[i+1].offsetLeft+btns[i+1].offsetWidth/2;
+      if(lx>=lcx&&lx<=rcx){
+        let t=(lx-lcx)/(rcx-lcx);
+        t=t<.5?2*t*t:1-2*(1-t)*(1-t); // ease in-out
+        return btns[i].offsetWidth*(1-t)+btns[i+1].offsetWidth*t;
+      }
+    }
+    return lx<=btns[0].offsetLeft+btns[0].offsetWidth/2?btns[0].offsetWidth:btns[btns.length-1].offsetWidth;
   }
   ftb.addEventListener('pointerdown',e=>{
-    startX=e.clientX;startY=e.clientY;dragging=false;
+    _spV++; // cancel spring before drag
+    startX=e.clientX;startY=e.clientY;prevX=e.clientX;prevT=performance.now();velX=0;dragging=false;
   });
   ftb.addEventListener('pointermove',e=>{
     if(!e.buttons)return;
     const dx=e.clientX-startX,dy=e.clientY-startY;
-    if(!dragging&&Math.sqrt(dx*dx+dy*dy)>7){
-      dragging=true;
-      ftb.classList.add('dragging');
-      ftb.setPointerCapture(e.pointerId);
-      capId=e.pointerId;
+    if(!dragging&&Math.sqrt(dx*dx+dy*dy)>6){
+      dragging=true;ftb.classList.add('dragging');ftb.setPointerCapture(e.pointerId);
+      pill.style.transition='none';
     }
-    if(dragging){
-      e.preventDefault();e.stopPropagation();
-      const rect=ftb.getBoundingClientRect();
-      const lx=e.clientX-rect.left;
-      setPillX(lx,false);
-      const ni=getNearestIdx(lx);
-      btns.forEach((b,i)=>b.classList.toggle('drag-hover',i===ni));
-    }
+    if(!dragging)return;
+    e.preventDefault();e.stopPropagation();
+    const now=performance.now(),dt=now-prevT;
+    if(dt>0)velX=(e.clientX-prevX)/dt*16;
+    prevX=e.clientX;prevT=now;
+    const rect=ftb.getBoundingClientRect();
+    const lx=e.clientX-rect.left;
+    const firstCx=btns[0].offsetLeft+btns[0].offsetWidth/2;
+    const lastCx=btns[btns.length-1].offsetLeft+btns[btns.length-1].offsetWidth/2;
+    const clx=Math.max(firstCx,Math.min(lastCx,lx));
+    const w=widthAtX(clx);
+    pill.style.left=(clx-w/2)+'px';
+    pill.style.width=w+'px';
+    // squash-and-stretch: wider when moving fast
+    const stretch=1+Math.min(Math.abs(velX)/360,.22);
+    pill.style.transform=`scaleX(${stretch})`;
+    btns.forEach((b,i)=>b.classList.toggle('drag-hover',i===nearestIdx(lx)));
   },{passive:false});
   function endDrag(e){
     if(!dragging)return;
-    dragging=false;capId=null;
-    ftb.classList.remove('dragging');
+    dragging=false;ftb.classList.remove('dragging');
     btns.forEach(b=>b.classList.remove('drag-hover'));
     const rect=ftb.getBoundingClientRect();
     const lx=e.clientX-rect.left;
-    const ni=getNearestIdx(lx);
+    const ni=nearestIdx(lx);
     const target=btns[ni]?.dataset.tab;
-    if(target&&target!==S.activeTab){switchTab(target);}
-    else{updateNavPill(true);}
+    springSnap(pill,btns[ni].offsetLeft,btns[ni].offsetWidth,velX);
+    if(target&&target!==S.activeTab){
+      // update state + render without re-running updateNavPill (spring handles position)
+      S.activeTab=target;
+      document.querySelectorAll('.tab-panel').forEach(el=>el.classList.toggle('active',el.id==='tab-'+target));
+      document.querySelectorAll('.nav-btn').forEach(el=>el.classList.toggle('active',el.dataset.tab===target));
+      renderTab(target);
+    }
   }
   ftb.addEventListener('pointerup',e=>endDrag(e));
   ftb.addEventListener('pointercancel',()=>{
     if(!dragging)return;
-    dragging=false;capId=null;
-    ftb.classList.remove('dragging');
+    dragging=false;ftb.classList.remove('dragging');
     btns.forEach(b=>b.classList.remove('drag-hover'));
-    updateNavPill(true);
+    const ai=btns.findIndex(b=>b.classList.contains('active'));
+    if(ai>=0)springSnap(pill,btns[ai].offsetLeft,btns[ai].offsetWidth,0);
   });
 }
 function renderTab(name){if(name==='home')renderHome();if(name==='accounts')renderAccounts();if(name==='spending')renderSpending();if(name==='more')renderMore();}
@@ -991,5 +1034,21 @@ document.addEventListener('change',e=>{const t=e.target;if(t.id==='c1'||t.id==='
 function init(){generateAppIcon();applyTheme();setTimeout(()=>{const f=document.getElementById('si-username');if(f)f.focus();},100);}
 document.addEventListener('DOMContentLoaded',init);
 </script>
+<svg id="nav-svg-filters" style="position:fixed;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+    <!-- subtle edge lensing for resting state -->
+    <filter id="lns" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.018 0.034" numOctaves="2" seed="8" result="nz"/>
+      <feDisplacementMap in="SourceGraphic" in2="nz" scale="4" xChannelSelector="R" yChannelSelector="G" result="dist"/>
+      <feComposite in="dist" in2="SourceGraphic" operator="in"/>
+    </filter>
+    <!-- stronger distortion while dragging -->
+    <filter id="lns-drag" x="-35%" y="-35%" width="170%" height="170%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.022 0.044" numOctaves="3" seed="3" result="nz"/>
+      <feDisplacementMap in="SourceGraphic" in2="nz" scale="9" xChannelSelector="R" yChannelSelector="G" result="dist"/>
+      <feComposite in="dist" in2="SourceGraphic" operator="in"/>
+    </filter>
+  </defs>
+</svg>
 </body>
 </html>
