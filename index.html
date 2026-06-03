@@ -4,6 +4,11 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"/>
 <title>MonoWallet</title>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="MonoWallet"/>
+<meta name="theme-color" content="#059669"/>
+<link id="ati" rel="apple-touch-icon" sizes="180x180" href=""/>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -140,7 +145,6 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text1);dis
   <h1 style="font-size:28px;font-weight:800;letter-spacing:-.03em;margin-bottom:5px">MonoWallet</h1>
   <p style="font-size:13px;color:var(--text3);margin-bottom:28px">All your banks, one dashboard</p>
   <div style="width:100%;display:flex;flex-direction:column;gap:10px;margin-bottom:6px">
-    <input class="field" type="text" id="si-name" placeholder="Your full name" autocomplete="name"/>
     <input class="field" type="text" id="si-username" placeholder="Username" autocomplete="username"/>
     <input class="field" type="password" id="si-password" placeholder="Password" autocomplete="current-password"/>
   </div>
@@ -345,16 +349,67 @@ function computeAIInsights(){
   if(recs.length>0)ins.push({type:'info',title:`${recs.length} Recurring Charges`,text:`Rs ${fmtNum(recs.reduce((s,t)=>s+Math.abs(t.amount),0))}/month. Audit for unused services.`});
   return ins.slice(0,3);
 }
+// ICON + UTILS
+function generateAppIcon(){
+  try{
+    const s=180,rr=36;const cv=document.createElement('canvas');cv.width=s;cv.height=s;
+    const x=cv.getContext('2d');
+    const g=x.createLinearGradient(0,0,s,s);g.addColorStop(0,'#10b981');g.addColorStop(1,'#059669');
+    x.fillStyle=g;x.beginPath();
+    x.moveTo(rr,0);x.lineTo(s-rr,0);x.arcTo(s,0,s,rr,rr);x.lineTo(s,s-rr);x.arcTo(s,s,s-rr,s,rr);
+    x.lineTo(rr,s);x.arcTo(0,s,0,s-rr,rr);x.lineTo(0,rr);x.arcTo(0,0,rr,0,rr);x.closePath();x.fill();
+    x.strokeStyle='rgba(255,255,255,.95)';x.lineWidth=7;x.lineCap='round';x.lineJoin='round';
+    x.beginPath();x.moveTo(28,64);x.lineTo(152,64);x.arcTo(158,64,158,70,6);x.lineTo(158,128);x.arcTo(158,134,152,134,6);x.lineTo(28,134);x.arcTo(22,134,22,128,6);x.lineTo(22,70);x.arcTo(22,64,28,64,6);x.closePath();x.stroke();
+    x.beginPath();x.moveTo(28,64);x.lineTo(28,50);x.arcTo(28,44,34,44,6);x.lineTo(118,44);x.arcTo(124,44,124,50,6);x.lineTo(124,64);x.stroke();
+    x.fillStyle='rgba(255,255,255,.22)';x.beginPath();x.moveTo(107,78);x.lineTo(150,78);x.arcTo(156,78,156,84,6);x.lineTo(156,118);x.arcTo(156,124,150,124,6);x.lineTo(107,124);x.arcTo(101,124,101,118,6);x.lineTo(101,84);x.arcTo(101,78,107,78,6);x.closePath();x.fill();
+    x.strokeStyle='rgba(255,255,255,.5)';x.lineWidth=3;x.stroke();
+    x.beginPath();x.arc(129,101,11,0,Math.PI*2);x.fillStyle='rgba(255,255,255,.5)';x.fill();x.strokeStyle='rgba(255,255,255,.9)';x.lineWidth=3;x.stroke();
+    const url=cv.toDataURL('image/png');
+    const l=document.getElementById('ati');if(l)l.href=url;
+    let fav=document.querySelector('link[rel="icon"]');
+    if(!fav){fav=document.createElement('link');fav.rel='icon';fav.type='image/png';document.head.appendChild(fav);}
+    fav.href=url;
+  }catch(e){}
+}
+function addToCalendar(title,dateStr,notes,monthly){
+  const dt=new Date((dateStr||new Date().toISOString().slice(0,10))+'T09:00:00');
+  const pad=n=>String(n).padStart(2,'0');
+  const fmt=d=>`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+  const end=new Date(dt.getTime()+30*60000);
+  const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//MonoWallet//EN','BEGIN:VEVENT',
+    `DTSTART:${fmt(dt)}`,`DTEND:${fmt(end)}`,
+    `SUMMARY:${title}`,notes?`DESCRIPTION:${notes.replace(/[\r\n]+/g,'\\n')}`:'',
+    monthly?'RRULE:FREQ=MONTHLY;COUNT=12':'',
+    `UID:mw${Date.now()}@monowallet`,
+    'BEGIN:VALARM','TRIGGER:-PT60M','ACTION:DISPLAY','DESCRIPTION:MonoWallet Reminder','END:VALARM',
+    'END:VEVENT','END:VCALENDAR'].filter(Boolean).join('\r\n');
+  const blob=new Blob([ics],{type:'text/calendar'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=title.replace(/[^a-z0-9]+/gi,'-').toLowerCase()+'.ics';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  toast('Calendar event saved — open the .ics file to add it','success',3500);
+}
+function accHealthData(a){
+  const cutoff=new Date(Date.now()-30*864e5);
+  const recent=S.transactions.filter(t=>t.accId===a.id&&t.amount<0&&new Date(t.date)>=cutoff);
+  const SCHED_KW=['rent','electricity','lesco','sui gas','ptcl','broadband','loan','emi','insurance','premium','subscription','netflix','spotify','youtube','apple','prime'];
+  const scheduled=recent.filter(t=>SCHED_KW.some(k=>t.desc.toLowerCase().includes(k)));
+  const totalSched=scheduled.reduce((s,t)=>s+Math.abs(t.amount),0);
+  if(!totalSched)return null;
+  const ratio=a.balance/totalSched;
+  const col=ratio>=2?'#22c55e':ratio>=1?'#f59e0b':'#ef4444';
+  const label=ratio>=2?'Healthy':ratio>=1?'Tight':'Insufficient';
+  return{scheduled,totalSched,ratio,col,label};
+}
 // SIGN-IN
+function nameFromUsername(u){return u.replace(/[_.\-]+/g,' ').split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' ').trim()||u;}
 function verifySIPin(){
-  const nameVal=(document.getElementById('si-name')?.value||'').trim();
   const user=(document.getElementById('si-username')?.value||'').trim();
   const pass=(document.getElementById('si-password')?.value||'');
   const showErr=(msg)=>{const e=document.getElementById('si-err');if(e){e.textContent=msg;e.style.display='block';}setTimeout(()=>{const e2=document.getElementById('si-err');if(e2)e2.style.display='none';},3000);};
-  if(!nameVal){showErr('Please enter your full name.');document.getElementById('si-name')?.focus();return;}
   if(!user){showErr('Please enter a username.');document.getElementById('si-username')?.focus();return;}
-  if(!pass){showErr('Please enter your password.');document.getElementById('si-password')?.focus();return;}
-  if(pass==='monowallet'||pass==='1234'){S.userName=nameVal;completeSignIn();}
+  if(!pass){showErr('Please enter a password.');document.getElementById('si-password')?.focus();return;}
+  if(pass==='monowallet'||pass==='1234'){S.userName=nameFromUsername(user);completeSignIn();}
   else{document.getElementById('si-password').value='';document.getElementById('si-password').classList.add('shake');setTimeout(()=>document.getElementById('si-password')?.classList.remove('shake'),400);showErr('Incorrect password.');}
 }
 function completeSignIn(){
@@ -463,7 +518,10 @@ function renderAccounts(){
 }
 function accCardHTML(a){
   const recent=S.transactions.filter(t=>t.accId===a.id).slice(0,3);
-  return `<div class="acc-card" style="background:linear-gradient(135deg,${a.color}18,${a.color}0a);border:1px solid ${a.color}2e"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${recent.length?'14':'0'}px"><div style="display:flex;align-items:center;gap:12px">${bankLogoHTML(a.bankId,a.color,a.abbr,44)}<div><p style="font-size:15px;font-weight:800;color:var(--text1)">${a.bankName}</p><p style="font-size:12px;color:var(--text2)">${a.type} · ${a.no}</p></div></div><div style="text-align:right"><p style="font-size:20px;font-weight:800;color:var(--text1)">${fmtPKR(a.balance)}</p><p style="font-size:10px;color:var(--text3)">Available</p></div></div>${recent.length?`<div style="border-top:1px solid var(--border);padding-top:10px"><p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">Recent</p>${recent.map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0"><div style="display:flex;align-items:center;gap:8px">${catIconSVG(t.category,14,CAT_COLORS[t.category]||'#64748b')}<span style="font-size:12px;color:var(--text2);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.desc}</span></div><span style="font-size:12px;font-weight:700;color:${t.amount>=0?'var(--clr-up)':'var(--clr-down)'};flex-shrink:0">${t.amount>=0?'+':''}${fmtPKR(Math.abs(t.amount))}</span></div>`).join('')}</div>`:''}
+  const health=accHealthData(a);
+  const calSVG='<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>';
+  const healthSection=health?`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);margin-top:10px"><div style="display:flex;align-items:center;gap:7px"><span style="width:7px;height:7px;border-radius:50%;background:${health.col};flex-shrink:0;display:inline-block"></span><div><p style="font-size:11px;font-weight:700;color:${health.col}">${health.label} · ${health.scheduled.length} scheduled</p><p style="font-size:10px;color:var(--text3)">~${fmtPKR(health.totalSched)}/mo auto-debits</p></div></div>${health.ratio<1?`<span style="font-size:9px;font-weight:800;padding:2px 7px;border-radius:5px;background:rgba(239,68,68,.12);color:#ef4444">UNDERFUNDED</span>`:''}</div>${health.scheduled.slice(0,3).map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0"><div style="display:flex;align-items:center;gap:7px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg><span style="font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px">${t.desc}</span></div><div style="display:flex;align-items:center;gap:5px;flex-shrink:0"><span style="font-size:11px;font-weight:700;color:var(--clr-down)">-${fmtPKR(Math.abs(t.amount))}</span><button style="background:none;border:none;cursor:pointer;padding:1px;color:var(--text3);display:inline-flex" title="Add to Calendar" data-action="calTx" data-tx-id="${t.id}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${calSVG}</svg></button></div></div>`).join('')}`:'';
+  return `<div class="acc-card" style="background:linear-gradient(135deg,${a.color}18,${a.color}0a);border:1px solid ${a.color}2e"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${recent.length||health?'14':'0'}px"><div style="display:flex;align-items:center;gap:12px">${bankLogoHTML(a.bankId,a.color,a.abbr,44)}<div><p style="font-size:15px;font-weight:800;color:var(--text1)">${a.bankName}</p><p style="font-size:12px;color:var(--text2)">${a.type} · ${a.no}</p></div></div><div style="text-align:right"><p style="font-size:20px;font-weight:800;color:var(--text1)">${fmtPKR(a.balance)}</p><p style="font-size:10px;color:var(--text3)">Available</p></div></div>${recent.length?`<div style="border-top:1px solid var(--border);padding-top:10px"><p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">Recent</p>${recent.map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0"><div style="display:flex;align-items:center;gap:8px">${catIconSVG(t.category,14,CAT_COLORS[t.category]||'#64748b')}<span style="font-size:12px;color:var(--text2);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.desc}</span></div><span style="font-size:12px;font-weight:700;color:${t.amount>=0?'var(--clr-up)':'var(--clr-down)'};flex-shrink:0">${t.amount>=0?'+':''}${fmtPKR(Math.abs(t.amount))}</span></div>`).join('')}</div>`:''}${healthSection}
   </div>`;
 }
 // SPENDING
@@ -586,7 +644,8 @@ function renderMore(){
 function debtCardHTML(d){
   const rem=d.total-d.paid,pct=Math.round((d.paid/d.total)*100),daysLeft=Math.ceil((new Date(d.due)-new Date())/864e5);
   const uc=daysLeft<7?'var(--clr-owe)':daysLeft<30?'#fcd34d':'var(--text3)';
-  return `<div class="card" style="padding:16px"><div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px"><div><span style="font-size:9px;font-weight:800;padding:2px 7px;border-radius:5px;background:rgba(239,68,68,.12);color:var(--clr-owe);letter-spacing:.06em">YOU OWE</span><p style="font-size:15px;font-weight:800;margin-top:5px;color:var(--text1)">${d.label}</p>${d.apr>0?`<p style="font-size:11px;color:var(--text3)">APR ${d.apr}%</p>`:''}</div><div style="text-align:right"><p style="font-size:18px;font-weight:800;color:var(--clr-owe)">${fmtPKR(rem)}</p><p style="font-size:10px;color:var(--text3)">remaining</p></div></div><div class="prog" style="height:6px;margin-bottom:8px"><div class="prog-fill" style="width:${pct}%;background:#ef4444"></div></div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-size:11px;color:var(--text3)">${pct}% paid · ${fmtPKR(d.total)} total</span><span style="font-size:11px;color:${uc}">Due ${fmtDate(d.due)}</span></div><div style="display:flex;gap:8px"><button class="btn btn-sm" style="flex:1;background:rgba(34,197,94,.12);color:var(--clr-lent);border:1px solid rgba(34,197,94,.2);font-family:inherit" data-action="settleDebt" data-debt-id="${d.id}">Mark Settled</button><button class="btn btn-sm" style="background:rgba(239,68,68,.08);color:var(--clr-owe);border:1px solid rgba(239,68,68,.18);font-family:inherit" data-action="removeDebt" data-debt-id="${d.id}">Remove</button></div></div>`;
+  const calSVG='<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>';
+  return `<div class="card" style="padding:16px"><div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px"><div><span style="font-size:9px;font-weight:800;padding:2px 7px;border-radius:5px;background:rgba(239,68,68,.12);color:var(--clr-owe);letter-spacing:.06em">YOU OWE</span><p style="font-size:15px;font-weight:800;margin-top:5px;color:var(--text1)">${d.label}</p>${d.apr>0?`<p style="font-size:11px;color:var(--text3)">APR ${d.apr}%</p>`:''}</div><div style="text-align:right"><p style="font-size:18px;font-weight:800;color:var(--clr-owe)">${fmtPKR(rem)}</p><p style="font-size:10px;color:var(--text3)">remaining</p></div></div><div class="prog" style="height:6px;margin-bottom:8px"><div class="prog-fill" style="width:${pct}%;background:#ef4444"></div></div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:var(--text3)">${pct}% paid · ${fmtPKR(d.total)} total</span></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:${uc}">Due ${fmtDate(d.due)}</span>${d.due?`<button style="background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;color:var(--text3);padding:2px" title="Add to Calendar" data-action="calDebt" data-debt-id="${d.id}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${calSVG}</svg></button>`:''}</div></div><div style="display:flex;gap:8px"><button class="btn btn-sm" style="flex:1;background:rgba(34,197,94,.12);color:var(--clr-lent);border:1px solid rgba(34,197,94,.2);font-family:inherit" data-action="settleDebt" data-debt-id="${d.id}">Mark Settled</button><button class="btn btn-sm" style="background:rgba(239,68,68,.08);color:var(--clr-owe);border:1px solid rgba(239,68,68,.18);font-family:inherit" data-action="removeDebt" data-debt-id="${d.id}">Remove</button></div></div>`;
 }
 function lentCardHTML(d){
   const rem=d.total-d.paid,pct=Math.round((d.paid/d.total)*100),daysLeft=Math.ceil((new Date(d.due)-new Date())/864e5);
@@ -617,6 +676,7 @@ function renderTxDetailModal(){
   <div style="text-align:center;margin-bottom:20px"><div style="width:52px;height:52px;border-radius:14px;background:${CAT_COLORS[tx.category]||'#64748b'}18;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">${catIconSVG(tx.category,22,CAT_COLORS[tx.category]||'#64748b')}</div><p style="font-size:15px;font-weight:700;margin-bottom:6px;color:var(--text1)">${tx.desc}</p><p style="font-size:32px;font-weight:800;color:${col}">${tx.amount<0?'−':'+'}${fmtPKR(Math.abs(tx.amount))}</p></div>
   ${flags.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:14px">${flags.map(f=>`<span class="flag-chip ${f.cls}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">${f.svg}</svg>${f.label}</span>`).join('')}</div>`:''}
   <div class="card" style="padding:4px 0;margin-bottom:14px">${[{label:'Date',val:new Date(tx.date).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})},{label:'Category',val:tx.category},{label:'Type',val:tx.type},{label:'Bank',val:acc.bankName},{label:'Account',val:acc.type},{label:'Account No',val:acc.no},{label:'TX ID',val:tx.id}].map(r=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text3);font-weight:600">${r.label}</span><span style="font-size:13px;font-weight:700;color:var(--text1);max-width:200px;overflow:hidden;text-overflow:ellipsis;text-align:right">${r.val}</span></div>`).join('')}</div>
+  ${flags.some(f=>f.cls==='flag-rec')?`<button class="btn btn-secondary btn-sm" style="width:100%;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:6px" data-action="calTx" data-tx-id="${tx.id}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Add Monthly Reminder</button>`:''}
   <button class="btn btn-secondary" style="width:100%" data-action="closeModal">Done</button></div>`;
 }
 function renderProfileModal(){
@@ -759,7 +819,7 @@ document.addEventListener('click',e=>{
       app2.style.display='none';si2.style.display='flex';si2.style.animation='fadeIn .4s ease both';
       ['si-name','si-username','si-password'].forEach(id=>{const e2=document.getElementById(id);if(e2)e2.value='';});
       const siErrEl=document.getElementById('si-err');if(siErrEl)siErrEl.style.display='none';
-      setTimeout(()=>{const f=document.getElementById('si-name');if(f)f.focus();},100);
+      setTimeout(()=>{const f=document.getElementById('si-username');if(f)f.focus();},100);
       break;
     case 'lbNext': handleLBNext(); break;
     case 'lbBack': S.modal.step=Math.max(0,S.modal.step-1);if(S.modal.step===0){S.modal.data.linkType=null;S.modal.data.selectedBank=null;S.modal.data.selectedCryptoWallet=null;}renderModal(); break;
@@ -769,6 +829,8 @@ document.addEventListener('click',e=>{
     case 'completeLinkBank': completeLinkBank(); break;
     case 'toggleFoundAcc':{if(!S.modal.data.selectedAccounts)S.modal.data.selectedAccounts=new Set();const aid=el.dataset.accId;if(S.modal.data.selectedAccounts.has(aid))S.modal.data.selectedAccounts.delete(aid);else S.modal.data.selectedAccounts.add(aid);renderModal();break;}
     case 'txDetail':{const txId=el.dataset.txId;const tx=S.transactions.find(t=>t.id===txId);if(tx)openModal('txDetail',{tx});break;}
+    case 'calTx':{const txId2=el.dataset.txId;const tx2=S.transactions.find(t=>t.id===txId2);if(tx2){const isRec=RECURRING_KW.some(k=>tx2.desc.toLowerCase().includes(k));addToCalendar(`${tx2.desc} Payment`,tx2.date,`${tx2.desc} — ${fmtPKR(Math.abs(tx2.amount))} from ${getAcc(tx2.accId)?.bankName||'account'}`,isRec);}break;}
+    case 'calDebt':{const d2=S.debts.find(x=>x.id===el.dataset.debtId);if(d2&&d2.due){addToCalendar(`Due: ${d2.label}`,d2.due,`Payment due: ${fmtPKR(d2.total-d2.paid)} remaining${d2.apr>0?` · APR ${d2.apr}%`:''}`,false);}break;}
     case 'addExpense':{
       const desc=document.getElementById('exp-desc')?.value.trim(),amt=parseFloat(document.getElementById('exp-amt')?.value),cat=document.getElementById('exp-cat')?.value,acc=document.getElementById('exp-acc')?.value,date=document.getElementById('exp-date')?.value||new Date().toISOString().slice(0,10);
       if(!desc||isNaN(amt)||amt<=0||!cat||!acc){toast('Fill in all fields','error');break;}
@@ -798,7 +860,7 @@ document.addEventListener('input',e=>{
   if(t.dataset.otpIdx!==undefined){handleOTPInput(t,parseInt(t.dataset.otpIdx));return;}
 });
 document.addEventListener('keydown',e=>{
-  if(e.key==='Enter'){const t=e.target;if(['si-name','si-username','si-password'].includes(t.id)){verifySIPin();return;}}
+  if(e.key==='Enter'){const t=e.target;if(['si-username','si-password'].includes(t.id)){verifySIPin();return;}}
   if(e.key!=='Backspace')return;
   const t=e.target;let prefix=null,idx=-1;
   if(t.dataset.siIdx!==undefined){prefix='si';idx=parseInt(t.dataset.siIdx);}
@@ -807,7 +869,7 @@ document.addEventListener('keydown',e=>{
   else if(prefix==='otp'&&!t.value&&idx>0){const p=document.querySelector(`[data-otp-idx="${idx-1}"]`);if(p){p.focus();p.value='';p.classList.remove('filled');}}
 });
 document.addEventListener('change',e=>{const t=e.target;if(t.id==='c1'||t.id==='c2'){S.modal.data[t.id]=t.checked;updateConsentBtn();}});
-function init(){setTimeout(()=>{const f=document.querySelector('[data-si-idx="0"]');if(f)f.focus();},100);}
+function init(){generateAppIcon();setTimeout(()=>{const f=document.getElementById('si-username');if(f)f.focus();},100);}
 document.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
