@@ -152,6 +152,14 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text1);dis
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 .shake{animation:shake .38s ease}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.bar-rect{transform-box:fill-box;transform-origin:50% 100%}
+@keyframes countUpPop{0%{transform:scale(.92);opacity:.4}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+.num-pop{animation:countUpPop .45s cubic-bezier(.34,1.4,.64,1) both}
+@keyframes cardIn{0%{opacity:0;transform:translateY(18px) scale(.97)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.card-in{animation:cardIn .42s cubic-bezier(.16,1,.3,1) both}
+@keyframes ripple{to{transform:scale(3.5);opacity:0}}
+.rpl-host{position:relative;overflow:hidden}
+.rpl{position:absolute;border-radius:50%;background:rgba(255,255,255,.22);pointer-events:none;animation:ripple .55s ease both;transform:scale(0)}
 </style>
 </head>
 <body>
@@ -645,11 +653,11 @@ function renderHome(){
   const eyePath=S.balanceHidden?'<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>':'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
   const sc=computeAIInsights()[0];
   const shortcuts=[
+    {ic:'<path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>',lb:'Transfer',sub:'Send money',col:'#10b981',bg:'rgba(16,185,129,.15)',ac:'openModal',modal:'transfer'},
     {ic:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',lb:'Spending',sub:'Analytics',col:'#f59e0b',bg:'rgba(245,158,11,.15)',ac:'switchTab',tab:'spending'},
-    {ic:'<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',lb:'AI Advisor',sub:'Smart tips',col:'#10b981',bg:'rgba(16,185,129,.15)',ac:'openModal',modal:'aiAdvisor'},
+    {ic:'<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',lb:'AI Advisor',sub:'Smart tips',col:'#6366f1',bg:'rgba(99,102,241,.15)',ac:'openModal',modal:'aiAdvisor'},
     {ic:'<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>',lb:'Accounts',sub:`${S.accounts.length} linked`,col:'#3b82f6',bg:'rgba(59,130,246,.15)',ac:'switchTab',tab:'accounts'},
     {ic:'<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',lb:'Health',sub:'Score',col:'#22d3ee',bg:'rgba(34,211,238,.15)',ac:'switchTab',tab:'more'},
-    {ic:'<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',lb:'Budget',sub:'Tracker',col:'#8b5cf6',bg:'rgba(139,92,246,.15)',ac:'switchTab',tab:'more'},
     {ic:'<path d="M12 5v14M5 12h14"/>',lb:'Add Bank',sub:'Link new',col:'#ec4899',bg:'rgba(236,72,153,.15)',ac:'openModal',modal:'linkBank'},
   ];
   el.innerHTML=`
@@ -667,9 +675,9 @@ function renderHome(){
   </div>
   ${sc?`<div class="card" style="padding:12px 14px;margin-bottom:18px;cursor:pointer;display:flex;align-items:center;gap:10px;border-color:rgba(16,185,129,.2)" data-action="openModal" data-modal="aiAdvisor"><div style="width:34px;height:34px;border-radius:10px;background:rgba(16,185,129,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div style="flex:1;min-width:0"><p style="font-size:12px;font-weight:700;color:var(--accent)">AI Insight</p><p style="font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sc.text}</p></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>`:''}
   <div style="display:flex;gap:8px;margin-bottom:20px">
-    <button class="qa-pill primary" data-action="openModal" data-modal="linkBank"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add Bank</button>
-    <button class="qa-pill" data-action="switchTab" data-tab="spending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</button>
-    <button class="qa-pill" data-action="switchTab" data-tab="more"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Finance</button>
+    <button class="qa-pill primary rpl-host" data-action="openModal" data-modal="transfer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>Transfer</button>
+    <button class="qa-pill rpl-host" data-action="openModal" data-modal="linkBank"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add Bank</button>
+    <button class="qa-pill rpl-host" data-action="switchTab" data-tab="spending"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Spend</button>
   </div>
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px">${shortcuts.map((s,i)=>`<div class="shortcut-tile rc d${(i%4)+1}" data-action="${s.ac}"${s.tab?` data-tab="${s.tab}"`:''}${s.modal?` data-modal="${s.modal}"`:''}><div style="width:44px;height:44px;border-radius:14px;background:${s.bg};display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${s.col}" stroke-width="2" stroke-linecap="round">${s.ic}</svg></div><p style="font-size:12px;font-weight:700;color:var(--text1)">${s.lb}</p><p style="font-size:10px;color:var(--text3)">${s.sub}</p></div>`).join('')}</div>
   ${renderHeroStatement()}`;
@@ -710,19 +718,23 @@ function renderAccounts(){
   const totalCrypto=S.cryptoAccounts.reduce((s,a)=>s+a.balancePKR,0);
   const btcSVG='<circle cx="12" cy="12" r="10"/><path d="M9.5 8h3a2.5 2.5 0 010 5H9.5V8z"/><path d="M9.5 13h3.5a2.5 2.5 0 010 5H9.5v-5z"/><line x1="12" y1="6" x2="12" y2="8"/><line x1="12" y1="18" x2="12" y2="20"/>';
   el.innerHTML=`
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px"><div><h1 style="font-size:22px;font-weight:800;letter-spacing:-.03em;color:var(--text1)">My Accounts</h1><p style="font-size:13px;color:var(--text3)">${S.accounts.length+S.cryptoAccounts.length} total · ${fmtPKR(totalFiat+totalCrypto)}</p></div><button class="btn btn-primary btn-sm" data-action="openModal" data-modal="linkBank"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add</button></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div><h1 style="font-size:22px;font-weight:800;letter-spacing:-.03em;color:var(--text1)">My Accounts</h1><p style="font-size:13px;color:var(--text3)">${S.accounts.length+S.cryptoAccounts.length} total · ${fmtPKR(totalFiat+totalCrypto)}</p></div><div style="display:flex;gap:7px"><button class="btn btn-secondary btn-sm" data-action="openModal" data-modal="transfer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>Transfer</button><button class="btn btn-primary btn-sm" data-action="openModal" data-modal="linkBank"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add</button></div></div>
   <div class="sec-lbl" style="margin-bottom:10px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Bank Accounts · ${fmtPKR(totalFiat)}</div>
   <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:16px">${S.accounts.length?S.accounts.map(accCardHTML).join(''):'<div class="card" style="padding:24px;text-align:center"><p style="color:var(--text3);font-size:13px;margin-bottom:10px">No bank accounts linked</p><button class="btn btn-primary btn-sm" data-action="openModal" data-modal="linkBank">Link Bank</button></div>'}</div>
   <div class="sec-lbl" style="margin-bottom:10px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F0B90B" stroke-width="2.5" stroke-linecap="round">${btcSVG}</svg><span style="color:#c97c0a">Crypto Wallets · ${fmtPKR(totalCrypto)}</span>${!S.includeCrypto?'<span style="font-size:9px;background:rgba(245,158,11,.12);color:var(--amber);padding:2px 7px;border-radius:5px;font-weight:700;margin-left:6px">EXCLUDED FROM NET WEALTH</span>':''}</div>
   <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:16px">${S.cryptoAccounts.length?S.cryptoAccounts.map(cryptoCardHTML).join(''):'<div class="card" style="padding:24px;text-align:center"><p style="color:var(--text3);font-size:13px;margin-bottom:10px">No crypto wallets linked</p><button class="btn btn-primary btn-sm" data-action="openModal" data-modal="linkBank">Link Wallet</button></div>'}</div>
   <button class="btn btn-secondary" style="width:100%;border-style:dashed" data-action="openModal" data-modal="linkBank"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add Account or Wallet</button>`;
+  requestAnimationFrame(()=>{
+    el.querySelectorAll('.acc-bal-num[data-balance]').forEach((n,i)=>{const v=parseFloat(n.dataset.balance);if(v)setTimeout(()=>countUp(n,v,900+i*80),i*60);});
+    initReveal();
+  });
 }
 function accCardHTML(a){
   const recent=S.transactions.filter(t=>t.accId===a.id).slice(0,3);
   const health=accHealthData(a);
   const calSVG='<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>';
   const healthSection=health?`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);margin-top:10px"><div style="display:flex;align-items:center;gap:7px"><span style="width:7px;height:7px;border-radius:50%;background:${health.col};flex-shrink:0;display:inline-block"></span><div><p style="font-size:11px;font-weight:700;color:${health.col}">${health.label} · ${health.scheduled.length} scheduled</p><p style="font-size:10px;color:var(--text3)">~${fmtPKR(health.totalSched)}/mo auto-debits</p></div></div>${health.ratio<1?`<span style="font-size:9px;font-weight:800;padding:2px 7px;border-radius:5px;background:rgba(239,68,68,.12);color:#ef4444">UNDERFUNDED</span>`:''}</div>${health.scheduled.slice(0,3).map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0"><div style="display:flex;align-items:center;gap:7px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg><span style="font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px">${t.desc}</span></div><div style="display:flex;align-items:center;gap:5px;flex-shrink:0"><span style="font-size:11px;font-weight:700;color:var(--clr-down)">-${fmtPKR(Math.abs(t.amount))}</span><button style="background:none;border:none;cursor:pointer;padding:1px;color:var(--text3);display:inline-flex" title="Add to Calendar" data-action="calTx" data-tx-id="${t.id}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${calSVG}</svg></button></div></div>`).join('')}`:'';
-  return `<div class="acc-card rc" style="background:linear-gradient(135deg,${a.color}18,${a.color}0a);border:1px solid ${a.color}2e"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${recent.length||health?'14':'0'}px"><div style="display:flex;align-items:center;gap:12px">${bankLogoHTML(a.bankId,a.color,a.abbr,44)}<div><p style="font-size:15px;font-weight:800;color:var(--text1)">${a.bankName}</p><p style="font-size:12px;color:var(--text2)">${a.type} · ${a.no}</p></div></div><div style="text-align:right"><p style="font-size:20px;font-weight:800;color:var(--text1)">${fmtPKR(a.balance)}</p><p style="font-size:10px;color:var(--text3)">Available</p></div></div>${recent.length?`<div style="border-top:1px solid var(--border);padding-top:10px"><p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">Recent</p>${recent.map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0"><div style="display:flex;align-items:center;gap:8px">${catIconSVG(t.category,14,CAT_COLORS[t.category]||'#64748b')}<span style="font-size:12px;color:var(--text2);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.desc}</span></div><span style="font-size:12px;font-weight:700;color:${t.amount>=0?'var(--clr-up)':'var(--clr-down)'};flex-shrink:0">${t.amount>=0?'+':''}${fmtPKR(Math.abs(t.amount))}</span></div>`).join('')}</div>`:''}${healthSection}
+  return `<div class="acc-card rc" style="background:linear-gradient(135deg,${a.color}18,${a.color}0a);border:1px solid ${a.color}2e"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${recent.length||health?'14':'0'}px"><div style="display:flex;align-items:center;gap:12px">${bankLogoHTML(a.bankId,a.color,a.abbr,44)}<div><p style="font-size:15px;font-weight:800;color:var(--text1)">${a.bankName}</p><p style="font-size:12px;color:var(--text2)">${a.type} · ${a.no}</p></div></div><div style="text-align:right"><p class="acc-bal-num" data-balance="${a.balance}" style="font-size:20px;font-weight:800;color:var(--text1)">Rs 0</p><p style="font-size:10px;color:var(--text3)">Available</p></div></div>${recent.length?`<div style="border-top:1px solid var(--border);padding-top:10px"><p style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">Recent</p>${recent.map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0"><div style="display:flex;align-items:center;gap:8px">${catIconSVG(t.category,14,CAT_COLORS[t.category]||'#64748b')}<span style="font-size:12px;color:var(--text2);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.desc}</span></div><span style="font-size:12px;font-weight:700;color:${t.amount>=0?'var(--clr-up)':'var(--clr-down)'};flex-shrink:0">${t.amount>=0?'+':''}${fmtPKR(Math.abs(t.amount))}</span></div>`).join('')}</div>`:''}${healthSection}
   </div>`;
 }
 // SPENDING
@@ -800,8 +812,12 @@ function txRowHTML(tx,flags){
 function barChartSVG(){
   const d=S.monthlyChart,mx=Math.max(...d.flatMap(x=>[x.inc,x.exp]));
   const W=360,H=140,MB=22,UH=H-MB-8,GW=W/d.length,BW=Math.floor((GW-14)/2);let r='';
-  d.forEach((x,i)=>{const xp=i*GW+7,ih=Math.round((x.inc/mx)*UH),eh=Math.round((x.exp/mx)*UH);r+=`<rect x="${xp}" y="${H-MB-ih}" width="${BW}" height="${ih}" fill="#22c55e" rx="3" opacity=".75" style="animation:barGrow .7s cubic-bezier(.16,1,.3,1) ${(i*.1).toFixed(2)}s both"/><rect x="${xp+BW+3}" y="${H-MB-eh}" width="${BW}" height="${eh}" fill="#10b981" rx="3" opacity=".75" style="animation:barGrow .7s cubic-bezier(.16,1,.3,1) ${(i*.1+.05).toFixed(2)}s both"/><text x="${xp+BW}" y="${H-4}" text-anchor="middle" fill="var(--text3-hex,#475569)" font-size="9" font-family="Plus Jakarta Sans,sans-serif">${x.m}</text>`;});
-  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block">${r}</svg>`;
+  d.forEach((x,i)=>{const xp=i*GW+7,ih=Math.round((x.inc/mx)*UH),eh=Math.round((x.exp/mx)*UH);
+    r+=`<rect class="bar-rect" x="${xp}" y="${H-MB-ih}" width="${BW}" height="${ih}" fill="#22c55e" rx="3" opacity=".78" style="animation:barGrow .72s cubic-bezier(.16,1,.3,1) ${(i*.1).toFixed(2)}s both"/>`;
+    r+=`<rect class="bar-rect" x="${xp+BW+3}" y="${H-MB-eh}" width="${BW}" height="${eh}" fill="#10b981" rx="3" opacity=".78" style="animation:barGrow .72s cubic-bezier(.16,1,.3,1) ${(i*.1+.05).toFixed(2)}s both"/>`;
+    r+=`<text x="${xp+BW}" y="${H-4}" text-anchor="middle" fill="var(--text3-hex,#475569)" font-size="9" font-family="Plus Jakarta Sans,sans-serif">${x.m}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block;overflow:visible">${r}</svg>`;
 }
 function donutChartHTML(){
   const cats=computeCats(),total=cats.reduce((s,c)=>s+c.amt,0);
@@ -812,6 +828,65 @@ function donutChartHTML(){
   return `<div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap"><div style="position:relative;flex-shrink:0"><svg width="${cx*2}" height="${cy*2}" viewBox="0 0 ${cx*2} ${cy*2}">${segs}</svg><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none"><p style="font-size:9px;color:var(--text3);text-transform:uppercase">Spent</p><p style="font-size:13px;font-weight:800;color:var(--text1)">${fmtPKR(total)}</p></div></div><div style="flex:1;min-width:130px">${leg}</div></div>`;
 }
 function computeCats(){const m={};S.transactions.filter(t=>t.amount<0&&t.category!=='Transfer').forEach(t=>{m[t.category]=(m[t.category]||0)+Math.abs(t.amount);});return Object.entries(m).map(([cat,amt])=>({cat,amt,color:CAT_COLORS[cat]||'#64748b'})).sort((a,b)=>b.amt-a.amt).slice(0,7);}
+// TRANSFER MODAL
+function renderTransferModal(){
+  const s=S.modal.step,d=S.modal.data;
+  const xBtn=`<button class="btn-icon" data-action="closeModal"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+  const dots=[1,2,3,4].map(n=>`<div class="sdot${n<s?' done':n===s?' active':''}"></div>`).join('');
+  const hdr=title=>`<div style="display:flex;align-items:center;gap:10px;padding:18px 0 12px">${s>1?`<button class="btn-icon" data-action="trBack"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>`:'<div style="width:38px"></div>'}<h2 style="font-size:18px;font-weight:800;flex:1;color:var(--text1)">${title}</h2>${xBtn}</div><div class="sdots" style="margin-bottom:16px">${dots}</div>`;
+  if(s===1){return `${hdr('Send Money')}<p style="font-size:13px;color:var(--text2);margin-bottom:16px">Select the accounts for the transfer</p>
+    <div style="margin-bottom:12px"><label class="lbl">From Account</label><select class="field" id="tr-from"><option value="">Select source</option>${S.accounts.map(a=>`<option value="${a.id}">${a.bankName} ${a.type} · ${fmtPKR(a.balance)}</option>`).join('')}</select></div>
+    <div style="margin-bottom:18px"><label class="lbl">To Account</label><select class="field" id="tr-to"><option value="">Select destination</option>${S.accounts.map(a=>`<option value="${a.id}">${a.bankName} ${a.type} · ${a.no}</option>`).join('')}</select></div>
+    <button class="btn btn-primary" style="width:100%" data-action="trNext">Continue</button>`;}
+  if(s===2){const from=getAcc(d.fromId),to=getAcc(d.toId);return `${hdr('Transfer Details')}<div style="display:flex;gap:8px;align-items:center;padding:11px 14px;background:var(--glass2);border-radius:13px;margin-bottom:16px;border:1px solid var(--border2)"><div style="flex:1"><p style="font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;margin-bottom:2px">From</p><p style="font-size:13px;font-weight:700;color:var(--text1)">${from?.bankName} ${from?.type}</p></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg><div style="flex:1;text-align:right"><p style="font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;margin-bottom:2px">To</p><p style="font-size:13px;font-weight:700;color:var(--text1)">${to?.bankName} ${to?.type}</p></div></div>
+    <div style="margin-bottom:12px"><label class="lbl">Amount (Rs)</label><input class="field" type="number" id="tr-amount" placeholder="0" min="1" max="${from?.balance||999999}" style="font-size:20px;font-weight:700"/><p style="font-size:11px;color:var(--text3);margin-top:5px">Available: <strong>${fmtPKR(from?.balance||0)}</strong></p></div>
+    <div style="margin-bottom:18px"><label class="lbl">Note (optional)</label><input class="field" id="tr-note" placeholder="What's this for?"/></div>
+    <button class="btn btn-primary" style="width:100%" data-action="trNext">Review Transfer</button>`;}
+  if(s===3){const from=getAcc(d.fromId),to=getAcc(d.toId),amt=d.amount||0;const newFrom=from?from.balance-amt:0,newTo=to?to.balance+amt:0;return `${hdr('Review')}<div class="card" style="padding:16px;margin-bottom:16px;border-radius:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><div style="text-align:center;flex:1"><p style="font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;margin-bottom:4px">From</p><p style="font-size:13px;font-weight:700;color:var(--text1)">${from?.bankName}</p><p style="font-size:11px;color:var(--text3)">${from?.no}</p></div><div style="width:36px;height:36px;border-radius:50%;background:var(--adim);border:1px solid rgba(16,185,129,.3);display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div><div style="text-align:center;flex:1"><p style="font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;margin-bottom:4px">To</p><p style="font-size:13px;font-weight:700;color:var(--text1)">${to?.bankName}</p><p style="font-size:11px;color:var(--text3)">${to?.no}</p></div></div>
+    <div style="border-top:1px solid var(--border);padding-top:12px">${[{l:'Amount',v:`<strong style="color:var(--accent);font-size:16px">${fmtPKR(amt)}</strong>`},{l:'Fee',v:'<span style="color:var(--clr-up)">Rs 0 (Free)</span>'},{l:'Note',v:d.note||'—'},{l:'From Balance After',v:`${fmtPKR(newFrom)}`},{l:'To Balance After',v:`${fmtPKR(newTo)}`}].map(r=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text3);font-weight:600">${r.l}</span><span style="font-size:13px;font-weight:700;color:var(--text1)">${r.v}</span></div>`).join('')}</div></div>
+    <button class="btn btn-primary" style="width:100%" data-action="trNext"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Enter PIN to Confirm</button>`;}
+  if(s===4){return `${hdr('Enter PIN')}<div style="text-align:center;margin-bottom:20px"><div style="width:54px;height:54px;border-radius:50%;background:var(--adim);border:2px solid rgba(16,185,129,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><p style="font-size:14px;font-weight:700;color:var(--text1)">Authorize Transfer</p><p style="font-size:12px;color:var(--text3)">Transfer: <strong style="color:var(--accent)">${fmtPKR(d.amount||0)}</strong></p><p style="font-size:11px;color:var(--accent);margin-top:4px;font-weight:600">Demo PIN: 1 2 3 4</p></div>
+    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:8px">${[0,1,2,3].map(i=>`<input class="digit-box" type="password" maxlength="1" inputmode="numeric" data-pin-idx="${i}" autocomplete="off"/>`).join('')}</div>
+    <p id="pin-err" style="display:none;text-align:center;color:var(--red);font-size:12px;margin-bottom:8px">Incorrect PIN. Try again.</p>
+    <button class="btn btn-primary" style="width:100%;margin-top:10px" data-action="trVerifyPin">Confirm Transfer</button>`;}
+  if(s===5){return `<div style="text-align:center;padding:28px 0 8px"><div style="width:72px;height:72px;border-radius:50%;background:rgba(34,197,94,.12);border:2px solid rgba(34,197,94,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--clr-up)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><h2 style="font-size:22px;font-weight:800;margin-bottom:6px;color:var(--text1)">Transfer Complete!</h2><p style="font-size:30px;font-weight:800;color:var(--accent);margin-bottom:4px">${fmtPKR(d.amount||0)}</p><p style="font-size:13px;color:var(--text2);margin-bottom:22px">Transferred successfully</p><button class="btn btn-primary" style="width:100%;margin-bottom:10px" onclick="closeModal();if(S.activeTab==='home')renderHome();if(S.activeTab==='accounts')renderAccounts()">Done</button></div>`;}
+  return'';
+}
+function handleTransferNext(){
+  const s=S.modal.step,d=S.modal.data;
+  if(s===1){const fromId=document.getElementById('tr-from')?.value,toId=document.getElementById('tr-to')?.value;if(!fromId||!toId){toast('Select both accounts','error');return;}if(fromId===toId){toast('Source and destination must differ','error');return;}d.fromId=fromId;d.toId=toId;advanceStep(2);}
+  else if(s===2){const amt=parseFloat(document.getElementById('tr-amount')?.value);if(!amt||amt<=0){toast('Enter a valid amount','error');return;}const fr=getAcc(d.fromId);if(fr&&amt>fr.balance){toast('Insufficient balance','error');return;}d.amount=amt;d.note=document.getElementById('tr-note')?.value.trim()||'';advanceStep(3);}
+  else if(s===3){advanceStep(4);setTimeout(()=>{const f=document.querySelector('[data-pin-idx="0"]');if(f)f.focus();},80);}
+}
+function verifyTransferPin(){
+  const pin=[0,1,2,3].map(i=>document.querySelector(`[data-pin-idx="${i}"]`)?.value||'').join('');
+  if(pin==='1234'){
+    const from=getAcc(S.modal.data.fromId),to=getAcc(S.modal.data.toId),amt=S.modal.data.amount,note=S.modal.data.note||'Transfer';
+    if(from)from.balance-=amt;if(to)to.balance+=amt;
+    const dt=new Date().toISOString().slice(0,10);
+    S.transactions.unshift({id:S.uid(),date:dt,desc:`Transfer to ${to?.bankName||'Account'}`,amount:-amt,type:'debit',category:'Transfer',accId:from?.id});
+    S.transactions.unshift({id:S.uid(),date:dt,desc:`Transfer from ${from?.bankName||'Account'}`,amount:amt,type:'credit',category:'Transfer',accId:to?.id});
+    advanceStep(5);launchConfetti();toast(`${fmtPKR(amt)} sent!`,'success');
+    if(S.activeTab==='home')renderHome();if(S.activeTab==='accounts')renderAccounts();
+  }else{
+    S.modal.data.pinAttempts=(S.modal.data.pinAttempts||0)+1;
+    document.querySelectorAll('[data-pin-idx]').forEach(b=>{b.classList.add('err','shake');b.value='';});
+    const pe=document.getElementById('pin-err');if(pe)pe.style.display='block';
+    setTimeout(()=>{document.querySelectorAll('[data-pin-idx]').forEach(b=>{b.classList.remove('err','shake');});const f=document.querySelector('[data-pin-idx="0"]');if(f)f.focus();},500);
+    if((S.modal.data.pinAttempts||0)>=3){toast('Too many incorrect attempts','error');setTimeout(closeModal,1200);}
+    else toast(`Wrong PIN · ${3-(S.modal.data.pinAttempts||0)} left`,'error');
+  }
+}
+// ADD GOAL FUNDS MODAL
+function renderAddGoalFundsModal(){
+  const g=S.modal.data.goal;if(!g)return'';const rem=g.target-g.saved;
+  return `<div style="padding-top:18px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px"><h2 style="font-size:18px;font-weight:800;color:var(--text1)">Add Funds</h2><button class="btn-icon" data-action="closeModal"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div style="text-align:center;padding:18px;background:var(--glass2);border-radius:16px;margin-bottom:18px;border:1px solid ${g.color}33"><span style="font-size:36px;display:block;margin-bottom:8px">${g.emoji}</span><p style="font-size:15px;font-weight:800;color:var(--text1);margin-bottom:4px">${g.name}</p><div class="prog" style="height:8px;margin:8px 0"><div class="prog-fill" style="width:${Math.min(100,Math.round(g.saved/g.target*100))}%;background:${g.color}"></div></div><p style="font-size:12px;color:var(--text3)">${fmtPKR(g.saved)} saved · <strong style="color:${g.color}">${fmtPKR(rem)} to go</strong></p></div>
+  <div style="margin-bottom:16px"><label class="lbl">Amount to Add</label><input class="field" type="number" id="gf-amount" placeholder="Rs 0" min="1" style="font-size:18px;font-weight:700"/></div>
+  <div style="display:flex;gap:8px;margin-bottom:16px">${[5000,10000,25000,50000].filter(v=>v<=rem).map(v=>`<button class="btn btn-secondary btn-xs" data-action="gfPreset" data-amt="${v}" style="flex:1">+${fmtPKR(v).replace('Rs ','')}</button>`).join('')}</div>
+  <button class="btn btn-primary" style="width:100%" data-action="confirmGoalFunds" data-goal-id="${g.id}">Add to Goal</button></div>`;
+}
 // MORE
 function renderMore(){
   const el=document.getElementById('tab-more');
@@ -960,7 +1035,7 @@ function lentCardHTML(d){
   return `<div class="card" style="padding:16px"><div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px"><div><span style="font-size:9px;font-weight:800;padding:2px 7px;border-radius:5px;background:rgba(34,197,94,.12);color:var(--clr-lent);letter-spacing:.06em">YOU LENT</span><p style="font-size:15px;font-weight:800;margin-top:5px;color:var(--text1)">${d.label}</p></div><div style="text-align:right"><p style="font-size:18px;font-weight:800;color:var(--clr-lent)">${fmtPKR(rem)}</p><p style="font-size:10px;color:var(--text3)">outstanding</p></div></div><div class="prog" style="height:6px;margin-bottom:8px"><div class="prog-fill" style="width:${pct}%;background:var(--accent)"></div></div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-size:11px;color:var(--text3)">${pct}% returned · ${fmtPKR(d.total)} total</span><span style="font-size:11px;color:${uc}">Due ${fmtDate(d.due)}</span></div><button class="btn btn-sm" style="width:100%;background:rgba(34,197,94,.12);color:var(--clr-lent);border:1px solid rgba(34,197,94,.2);font-family:inherit" data-action="markReturned" data-debt-id="${d.id}">Mark as Returned</button></div>`;
 }
 // MODALS
-function openModal(name,data){S.modal.active=name;S.modal.step=name==='linkBank'?0:1;S.modal.data=data||{};document.getElementById('modal-overlay').classList.add('open');renderModal();}
+function openModal(name,data){S.modal.active=name;S.modal.step=(name==='linkBank')?0:1;S.modal.data=data||{};document.getElementById('modal-overlay').classList.add('open');renderModal();}
 function closeModal(){if(S.modal.data.otpTimer)clearInterval(S.modal.data.otpTimer);S.modal={active:null,step:1,data:{}};document.getElementById('modal-overlay').classList.remove('open');}
 function advanceStep(n){S.modal.step=n;renderModal();}
 function renderModal(){
@@ -973,6 +1048,8 @@ function renderModal(){
     case 'curSelect':body.innerHTML=renderCurSelectModal();break;
     case 'markReturned':body.innerHTML=renderMarkReturnedModal();break;
     case 'addGoal':body.innerHTML=renderAddGoalModal();break;
+    case 'transfer':body.innerHTML=renderTransferModal();if(S.modal.step===4)setTimeout(()=>{const f=document.querySelector('[data-pin-idx="0"]');if(f)f.focus();},80);break;
+    case 'addGoalFunds':body.innerHTML=renderAddGoalFundsModal();break;
     default:body.innerHTML='';
   }
 }
@@ -1111,6 +1188,9 @@ function toast(msg,type,dur){type=type||'info';dur=dur||3200;const colors={info:
 function startRates(){setInterval(()=>{Object.keys(S.rates).forEach(c=>{if(c==='PKR')return;S.rates[c]=BASE_RATES[c]*(1+(Math.random()-.5)*0.01);});S.ratesTs=Date.now();if(S.activeTab==='home'){const d=document.getElementById('nw-display'),t=document.getElementById('rate-ts');if(d&&!S.balanceHidden)d.textContent=fmtAmt(trueNetWealth());if(t)t.textContent='just now';}},30000);setInterval(()=>{const t=document.getElementById('rate-ts');if(t&&S.activeTab==='home')t.textContent=secsAgo(S.ratesTs)+'s ago';},1000);}
 // EVENTS
 document.addEventListener('click',e=>{
+  // Ripple effect on rpl-host elements
+  const rplHost=e.target.closest('.rpl-host,.btn-primary,.btn-secondary,.qa-pill,.shortcut-tile');
+  if(rplHost){const r=document.createElement('span');r.className='rpl';const rect=rplHost.getBoundingClientRect();const sz=Math.max(rect.width,rect.height)*1.2;r.style.cssText=`width:${sz}px;height:${sz}px;left:${e.clientX-rect.left-sz/2}px;top:${e.clientY-rect.top-sz/2}px`;if(!rplHost.classList.contains('rpl-host')){rplHost.style.position='relative';rplHost.style.overflow='hidden';}rplHost.appendChild(r);setTimeout(()=>r.remove(),600);}
   if(S.curDDOpen&&!e.target.closest('#cur-dd-wrapper')){S.curDDOpen=false;if(S.activeTab==='home')renderHome();}
   const el=e.target.closest('[data-action]');if(!el)return;
   const{action,tab,cur,period,modal}=el.dataset;
@@ -1183,15 +1263,21 @@ document.addEventListener('click',e=>{
     case 'saveIncome':{const v=parseFloat(document.getElementById('inc-field')?.value);if(isNaN(v)||v<0){toast('Invalid amount','error');break;}S.monthlyIncome=v;toast('Saved','success');break;}
     case 'openModal':
       if(el.dataset.modal==='addGoal'){S._goalColor='#10b981';openModal('addGoal');}
+      else if(el.dataset.modal==='transfer'){if(S.accounts.length<2){toast('Link at least 2 accounts to transfer','warning');break;}openModal('transfer');}
       else openModal(el.dataset.modal);
       break;
-    case 'addGoalFunds':{
-      const gid=el.dataset.goalId;
-      const g=S.goals.find(x=>x.id===gid);
-      if(g){
-        const amt=parseInt(prompt(`Add funds to "${g.name}" (current: Rs ${fmtNum(g.saved)}):`) || '0');
-        if(amt>0){g.saved=Math.min(g.target,g.saved+amt);renderMore();toast(`Rs ${fmtNum(amt)} added to ${g.name}!`,'success');}
-      }
+    case 'trNext': handleTransferNext(); break;
+    case 'trBack': S.modal.step=Math.max(1,S.modal.step-1);renderModal(); break;
+    case 'trVerifyPin': verifyTransferPin(); break;
+    case 'addGoalFunds':{const gid=el.dataset.goalId;const g=S.goals.find(x=>x.id===gid);if(g)openModal('addGoalFunds',{goal:g});break;}
+    case 'gfPreset':{const ainput=document.getElementById('gf-amount');if(ainput)ainput.value=el.dataset.amt;break;}
+    case 'confirmGoalFunds':{
+      const gid=el.dataset.goalId,g=S.goals.find(x=>x.id===gid);
+      const amt=parseFloat(document.getElementById('gf-amount')?.value);
+      if(!g||isNaN(amt)||amt<=0){toast('Enter a valid amount','error');break;}
+      g.saved=Math.min(g.target,g.saved+amt);
+      toast(`${fmtPKR(amt)} added to ${g.name}!`,'success');
+      closeModal();if(S.activeTab==='more')renderMore();
       break;
     }
     case 'pickGoalColor':
@@ -1220,17 +1306,16 @@ document.addEventListener('input',e=>{
   const t=e.target;
   if(t.id==='bank-search'){onBankSearch(t.value);return;}
   if(t.id==='crypto-search'){S.modal.data.cryptoFilter=t.value;renderModal();const inp=document.getElementById('crypto-search');if(inp){inp.focus();inp.setSelectionRange(t.value.length,t.value.length);}return;}
-  if(t.dataset.siIdx!==undefined){handleSIInput(t,parseInt(t.dataset.siIdx));return;}
   if(t.dataset.otpIdx!==undefined){handleOTPInput(t,parseInt(t.dataset.otpIdx));return;}
+  if(t.dataset.pinIdx!==undefined){handlePINInput(t,parseInt(t.dataset.pinIdx));return;}
 });
+function handlePINInput(el,idx){el.value=el.value.replace(/\D/g,'').slice(-1);el.classList.toggle('filled',!!el.value);if(el.value&&idx<3){const n=document.querySelector(`[data-pin-idx="${idx+1}"]`);if(n)n.focus();}if(idx===3&&el.value){const all=[0,1,2,3].every(i=>{const e=document.querySelector(`[data-pin-idx="${i}"]`);return e&&e.value;});if(all)setTimeout(verifyTransferPin,120);}}
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'){const t=e.target;if(['si-username','si-password'].includes(t.id)){verifySIPin();return;}}
   if(e.key!=='Backspace')return;
-  const t=e.target;let prefix=null,idx=-1;
-  if(t.dataset.siIdx!==undefined){prefix='si';idx=parseInt(t.dataset.siIdx);}
-  else if(t.dataset.otpIdx!==undefined){prefix='otp';idx=parseInt(t.dataset.otpIdx);}
-  if(prefix==='si'&&!t.value&&idx>0){const p=document.querySelector(`[data-si-idx="${idx-1}"]`);if(p){p.focus();p.value='';p.classList.remove('filled');}}
-  else if(prefix==='otp'&&!t.value&&idx>0){const p=document.querySelector(`[data-otp-idx="${idx-1}"]`);if(p){p.focus();p.value='';p.classList.remove('filled');}}
+  const t=e.target;
+  if(t.dataset.otpIdx!==undefined&&!t.value){const idx=parseInt(t.dataset.otpIdx);if(idx>0){const p=document.querySelector(`[data-otp-idx="${idx-1}"]`);if(p){p.focus();p.value='';p.classList.remove('filled');}}}
+  else if(t.dataset.pinIdx!==undefined&&!t.value){const idx=parseInt(t.dataset.pinIdx);if(idx>0){const p=document.querySelector(`[data-pin-idx="${idx-1}"]`);if(p){p.focus();p.value='';p.classList.remove('filled');}}}
 });
 document.addEventListener('change',e=>{const t=e.target;if(t.id==='c1'||t.id==='c2'){S.modal.data[t.id]=t.checked;updateConsentBtn();}});
 function init(){generateAppIcon();applyTheme();setTimeout(()=>{const f=document.getElementById('si-username');if(f)f.focus();},100);}
